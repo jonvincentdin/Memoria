@@ -1,0 +1,88 @@
+# Architecture
+
+## Proposed design
+
+React JavaScript browser UI → Spring Boot REST API → local H2 file database.
+
+Use a single Spring Boot application with controller, service, repository, and entity packages. React has pages/components and one small API helper; avoid extra architectural layers. The H2 database keeps the classroom setup small and persists between backend restarts. Run one backend instance and use sample data only.
+
+## Folder layout
+
+- `src/frontend/`: planned Vite React JavaScript application.
+- `src/backend/`: planned Spring Boot Maven project.
+- `tests/`: shared manual acceptance checklist; generated Java tests belong in `src/backend/src/test/java`.
+- `docs/`: requirements, architecture, backlog, plans, and evidence.
+- `.github/`: GitHub issue and pull request templates.
+
+Only placeholder/configuration files are present in source folders. Generate the application scaffolds before using run commands.
+
+## Local configuration
+
+After scaffolding, add this proxy to the Vite configuration's existing `defineConfig` object (preserve its React plugin):
+
+```javascript
+server: {
+  proxy: {
+    '/api': { target: 'http://localhost:8080', changeOrigin: true }
+  }
+}
+```
+
+Frontend calls `/api/...` using `credentials: 'include'`. Keep requests on the Vite origin through the proxy to avoid unnecessary CORS setup.
+
+Configure Spring using `application.properties`, with environment overrides:
+
+```properties
+server.port=${SERVER_PORT:8080}
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:h2:file:./data/memoria}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:sa}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
+spring.jpa.hibernate.ddl-auto=update
+spring.h2.console.enabled=false
+server.servlet.session.cookie.http-only=true
+server.servlet.session.cookie.same-site=lax
+```
+
+Set `SPRING_DATASOURCE_PASSWORD` in the backend run configuration before starting. `ddl-auto=update` is only a local prototype convenience. A root `.env` is not loaded automatically; Vite separately reads `src/frontend/.env.local`. Variables beginning `VITE_` are browser-visible and must contain no secrets.
+
+## Sessions and authorization
+
+Use Spring Security session authentication with BCrypt. Provide registration, form-encoded login handled by Spring Security at `/api/auth/login`, logout, and current-user endpoints. Add a small `/api/auth/csrf` endpoint returning the session CSRF token's value and header name; load it before each modifying request, including login/logout, and reload after authentication changes. Keep CSRF protection enabled and configure API failures as JSON 401/403 rather than HTML redirects. Keep secure cookies enabled if HTTPS hosting is later added.
+
+Derive the user ID from the authenticated session. Repository/service queries must combine resource ID with owner ID. Never accept client-supplied ownership or trust a frontend-only access check.
+
+## Minimal entities
+
+| Entity | Main fields | Relationships |
+| --- | --- | --- |
+| User | id, name, email (unique), passwordHash | Owns notes, reviewers, quizzes, attempts |
+| Note | id, ownerId, title, body, updatedAt | User → many notes |
+| Reviewer | id, ownerId, noteId, title, body | Note → many reviewers |
+| Quiz | id, ownerId, reviewerId, title | Reviewer → many quizzes |
+| Question | id, quizId, text, choiceA–D, correctChoice | Quiz → many questions |
+| Attempt | id, ownerId, quizId, submittedAt, correctCount, totalCount, submissionToken (unique) | Quiz → many attempts |
+| AttemptAnswer | id, attemptId, questionId, selectedChoice (nullable) | Attempt → many answers |
+
+Check that parent objects belong to the same user. Save a quiz and its questions transactionally. Use a transaction for grading and saving an attempt. Enforce the edit/delete restrictions in requirements to retain history without snapshots or complex versioning.
+
+## Planned API surface
+
+| Route | Purpose |
+| --- | --- |
+| GET /api/auth/csrf | Obtain CSRF token |
+| POST /api/auth/register | Register account |
+| POST /api/auth/login | Start session |
+| POST /api/auth/logout | Invalidate session |
+| GET /api/auth/me | Current user |
+| GET/POST /api/notes | List/create notes |
+| GET/PUT/DELETE /api/notes/{id} | Read/update/delete owned note |
+| GET/POST /api/reviewers | List/create reviewers |
+| GET/PUT/DELETE /api/reviewers/{id} | Read/update/delete owned reviewer |
+| GET/POST /api/quizzes | List/create quizzes |
+| GET/PUT/DELETE /api/quizzes/{id} | Authoring operations; owned content only |
+| GET /api/quizzes/{id}/take | Questions without answer keys; issue submission token |
+| POST /api/quizzes/{id}/attempts | Validate token, grade on server, save result |
+| GET /api/attempts | Personal history |
+| GET /api/attempts/{id} | Saved result and answer review |
+
+These are implementation contracts, not existing endpoints. No external AI API, cloud service, or messaging system is needed.
