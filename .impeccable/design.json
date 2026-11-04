@@ -1,0 +1,378 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-04T16:45:54.020Z",
+  "title": "Design System: Memoria",
+  "extensions": {
+    "colorMeta": {
+      "forest": {
+        "role": "primary",
+        "displayName": "Forest",
+        "tonalRamp": [
+          "oklch(15% 0.0615 170.02)",
+          "oklch(26% 0.0615 170.02)",
+          "oklch(38% 0.0615 170.02)",
+          "oklch(49% 0.0615 170.02)",
+          "oklch(61% 0.0615 170.02)",
+          "oklch(72% 0.0615 170.02)",
+          "oklch(84% 0.0615 170.02)",
+          "oklch(95% 0.0615 170.02)"
+        ]
+      },
+      "forest-hover": {
+        "role": "primary",
+        "displayName": "Forest Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0510 169.05)",
+          "oklch(26% 0.0510 169.05)",
+          "oklch(38% 0.0510 169.05)",
+          "oklch(49% 0.0510 169.05)",
+          "oklch(61% 0.0510 169.05)",
+          "oklch(72% 0.0510 169.05)",
+          "oklch(84% 0.0510 169.05)",
+          "oklch(95% 0.0510 169.05)"
+        ]
+      },
+      "forest-active": {
+        "role": "primary",
+        "displayName": "Forest Active",
+        "tonalRamp": [
+          "oklch(15% 0.0456 167.31)",
+          "oklch(26% 0.0456 167.31)",
+          "oklch(38% 0.0456 167.31)",
+          "oklch(49% 0.0456 167.31)",
+          "oklch(61% 0.0456 167.31)",
+          "oklch(72% 0.0456 167.31)",
+          "oklch(84% 0.0456 167.31)",
+          "oklch(95% 0.0456 167.31)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "tonalRamp": [
+          "oklch(15% 0.0041 121.56)",
+          "oklch(26% 0.0041 121.56)",
+          "oklch(38% 0.0041 121.56)",
+          "oklch(49% 0.0041 121.56)",
+          "oklch(61% 0.0041 121.56)",
+          "oklch(72% 0.0041 121.56)",
+          "oklch(84% 0.0041 121.56)",
+          "oklch(95% 0.0041 121.56)"
+        ]
+      },
+      "sage": {
+        "role": "primary",
+        "displayName": "Sage",
+        "tonalRamp": [
+          "oklch(15% 0.0135 134.90)",
+          "oklch(26% 0.0135 134.90)",
+          "oklch(38% 0.0135 134.90)",
+          "oklch(49% 0.0135 134.90)",
+          "oklch(61% 0.0135 134.90)",
+          "oklch(72% 0.0135 134.90)",
+          "oklch(84% 0.0135 134.90)",
+          "oklch(95% 0.0135 134.90)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0167 163.43)",
+          "oklch(26% 0.0167 163.43)",
+          "oklch(38% 0.0167 163.43)",
+          "oklch(49% 0.0167 163.43)",
+          "oklch(61% 0.0167 163.43)",
+          "oklch(72% 0.0167 163.43)",
+          "oklch(84% 0.0167 163.43)",
+          "oklch(95% 0.0167 163.43)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15% 0.0220 157.36)",
+          "oklch(26% 0.0220 157.36)",
+          "oklch(38% 0.0220 157.36)",
+          "oklch(49% 0.0220 157.36)",
+          "oklch(61% 0.0220 157.36)",
+          "oklch(72% 0.0220 157.36)",
+          "oklch(84% 0.0220 157.36)",
+          "oklch(95% 0.0220 157.36)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "tonalRamp": [
+          "oklch(15% 0.0187 148.03)",
+          "oklch(26% 0.0187 148.03)",
+          "oklch(38% 0.0187 148.03)",
+          "oklch(49% 0.0187 148.03)",
+          "oklch(61% 0.0187 148.03)",
+          "oklch(72% 0.0187 148.03)",
+          "oklch(84% 0.0187 148.03)",
+          "oklch(95% 0.0187 148.03)"
+        ]
+      },
+      "error": {
+        "role": "neutral",
+        "displayName": "Error",
+        "tonalRamp": [
+          "oklch(15% 0.1501 24.68)",
+          "oklch(26% 0.1501 24.68)",
+          "oklch(38% 0.1501 24.68)",
+          "oklch(49% 0.1501 24.68)",
+          "oklch(61% 0.1501 24.68)",
+          "oklch(72% 0.1501 24.68)",
+          "oklch(84% 0.1501 24.68)",
+          "oklch(95% 0.1501 24.68)"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "preview-paper": {
+        "role": "neutral",
+        "displayName": "Preview Paper",
+        "tonalRamp": [
+          "oklch(15% 0.0041 91.45)",
+          "oklch(26% 0.0041 91.45)",
+          "oklch(38% 0.0041 91.45)",
+          "oklch(49% 0.0041 91.45)",
+          "oklch(61% 0.0041 91.45)",
+          "oklch(72% 0.0041 91.45)",
+          "oklch(84% 0.0041 91.45)",
+          "oklch(95% 0.0041 91.45)"
+        ]
+      },
+      "focus": {
+        "role": "primary",
+        "displayName": "Focus",
+        "tonalRamp": [
+          "oklch(15% 0.0797 165.68)",
+          "oklch(26% 0.0797 165.68)",
+          "oklch(38% 0.0797 165.68)",
+          "oklch(49% 0.0797 165.68)",
+          "oklch(61% 0.0797 165.68)",
+          "oklch(72% 0.0797 165.68)",
+          "oklch(84% 0.0797 165.68)",
+          "oklch(95% 0.0797 165.68)"
+        ]
+      },
+      "input-hover": {
+        "role": "neutral",
+        "displayName": "Input Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0351 153.66)",
+          "oklch(26% 0.0351 153.66)",
+          "oklch(38% 0.0351 153.66)",
+          "oklch(49% 0.0351 153.66)",
+          "oklch(61% 0.0351 153.66)",
+          "oklch(72% 0.0351 153.66)",
+          "oklch(84% 0.0351 153.66)",
+          "oklch(95% 0.0351 153.66)"
+        ]
+      },
+      "divider": {
+        "role": "neutral",
+        "displayName": "Divider",
+        "tonalRamp": [
+          "oklch(15% 0.0115 128.60)",
+          "oklch(26% 0.0115 128.60)",
+          "oklch(38% 0.0115 128.60)",
+          "oklch(49% 0.0115 128.60)",
+          "oklch(61% 0.0115 128.60)",
+          "oklch(72% 0.0115 128.60)",
+          "oklch(84% 0.0115 128.60)",
+          "oklch(95% 0.0115 128.60)"
+        ]
+      },
+      "note-surface": {
+        "role": "neutral",
+        "displayName": "Note Surface",
+        "tonalRamp": [
+          "oklch(15% 0.0136 120.28)",
+          "oklch(26% 0.0136 120.28)",
+          "oklch(38% 0.0136 120.28)",
+          "oklch(49% 0.0136 120.28)",
+          "oklch(61% 0.0136 120.28)",
+          "oklch(72% 0.0136 120.28)",
+          "oklch(84% 0.0136 120.28)",
+          "oklch(95% 0.0136 120.28)"
+        ]
+      },
+      "highlight": {
+        "role": "neutral",
+        "displayName": "Highlight",
+        "tonalRamp": [
+          "oklch(15% 0.0506 120.89)",
+          "oklch(26% 0.0506 120.89)",
+          "oklch(38% 0.0506 120.89)",
+          "oklch(49% 0.0506 120.89)",
+          "oklch(61% 0.0506 120.89)",
+          "oklch(72% 0.0506 120.89)",
+          "oklch(84% 0.0506 120.89)",
+          "oklch(95% 0.0506 120.89)"
+        ]
+      },
+      "dot": {
+        "role": "primary",
+        "displayName": "Dot",
+        "tonalRamp": [
+          "oklch(15% 0.0768 139.95)",
+          "oklch(26% 0.0768 139.95)",
+          "oklch(38% 0.0768 139.95)",
+          "oklch(49% 0.0768 139.95)",
+          "oklch(61% 0.0768 139.95)",
+          "oklch(72% 0.0768 139.95)",
+          "oklch(84% 0.0768 139.95)",
+          "oklch(95% 0.0768 139.95)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Editorial headline",
+        "purpose": "Desktop story panel."
+      },
+      "headline": {
+        "displayName": "Auth heading",
+        "purpose": "Login and signup introduction."
+      },
+      "title": {
+        "displayName": "Study topic",
+        "purpose": "Preview topic heading."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Introductory copy."
+      },
+      "label": {
+        "displayName": "Field label",
+        "purpose": "Visible field labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "study-sheet",
+        "value": "0 5px 12px -4px #324a3f12",
+        "purpose": "Ambient depth under the study preview only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-state",
+        "value": "150ms ease",
+        "purpose": "Input border and submit background transitions; removed under prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow-mobile",
+        "value": "360px"
+      },
+      {
+        "name": "form-only",
+        "value": "900px"
+      },
+      {
+        "name": "compact-desktop-upper",
+        "value": "1050px"
+      },
+      {
+        "name": "wide-desktop",
+        "value": "1600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary submit",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Full width auth action; minimum height 49px.",
+      "html": "<button class=\"ds-submit\">Log in <span aria-hidden=\"true\">→</span></button>",
+      "css": ".ds-submit{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-height:49px;background:var(--forest,#245747);border:0;color:#fff;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:550;cursor:pointer;transition:background 150ms ease}.ds-submit:hover{background:#173f32}.ds-submit:active{background:#123428}.ds-submit:focus-visible{outline:3px solid #408268;outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-submit{transition:none}}"
+    },
+    {
+      "name": "Email field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Visible label with a flat white bordered control.",
+      "html": "<label class=\"ds-label\" for=\"ds-email\">Email address</label><input class=\"ds-input\" id=\"ds-email\" type=\"email\" autocomplete=\"email\">",
+      "css": ".ds-label{display:block;margin-bottom:9px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:550;color:var(--ink,#202a25)}.ds-input{display:block;width:100%;min-height:49px;background:#fff;border:1px solid var(--border,#a8b3a9);border-radius:6px;padding:12px 14px;color:var(--ink,#202a25);font-family:'DM Sans',sans-serif;font-size:15px;transition:border-color 150ms ease}.ds-input:hover{border-color:#6f8575}.ds-input:focus{outline:2px solid #408268;outline-offset:2px;border-color:var(--forest,#245747)}.ds-input[aria-invalid=true]{border-color:var(--error,#a33131)}@media(prefers-reduced-motion:reduce){.ds-input{transition:none}}"
+    },
+    {
+      "name": "Account navigation",
+      "kind": "nav",
+      "description": "Under-form route switch shown at every viewport.",
+      "html": "<p class=\"ds-switch\">New to Memoria? <a href=\"#/signup\">Create an account</a></p>",
+      "css": ".ds-switch{margin:24px 0 0;text-align:center;color:var(--muted,#5e6c63);font-family:'DM Sans',sans-serif;font-size:12px;line-height:1.8}.ds-switch a{font-weight:600;white-space:nowrap;color:var(--forest,#245747);text-underline-offset:4px}.ds-switch a:hover{text-decoration:underline}.ds-switch a:focus-visible{outline:3px solid #408268;outline-offset:4px}"
+    },
+    {
+      "name": "Study preview sheet",
+      "kind": "card",
+      "refersTo": "study-preview",
+      "description": "Small desktop illustration; biological study content remains explicitly illustrative.",
+      "html": "<section class=\"ds-sheet\"><div class=\"ds-sheet-top\">Your study space <span>A little preview</span></div><div class=\"ds-sheet-body\"><div>Biology / The basics</div><h3>Small cells. Big ideas.</h3><p>Every living thing begins with a cell.</p></div></section>",
+      "css": ".ds-sheet{background:#fffefb;border-radius:10px;box-shadow:0 5px 12px -4px #324a3f12;transform:rotate(-2deg);font-family:'DM Sans',sans-serif;color:var(--ink,#202a25);max-width:480px}.ds-sheet-top{padding:20px 23px 16px;font-size:12px;font-weight:550;display:flex;gap:8px}.ds-sheet-top span{margin-left:auto;font-size:11px;font-weight:400;color:var(--muted,#5e6c63)}.ds-sheet-body{padding:23px 25px 18px;font-size:11px;color:var(--muted,#5e6c63)}.ds-sheet h3{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;letter-spacing:-.02em;margin:7px 0 11px;color:var(--ink,#202a25)}.ds-sheet p{font-size:12px;line-height:1.7;margin:0;color:#52604f}"
+    },
+    {
+      "name": "Study tabs",
+      "kind": "nav",
+      "refersTo": "preview-tab",
+      "description": "Local preview navigation; active underline, not a saved-document navigation.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\" aria-label=\"Study preview\"><button role=\"tab\" aria-selected=\"true\">Notes</button><button role=\"tab\" aria-selected=\"false\" tabindex=\"-1\">Reviewer</button><button role=\"tab\" aria-selected=\"false\" tabindex=\"-1\">Quiz</button></div>",
+      "css": ".ds-tabs{display:flex;gap:24px;padding:0 23px;border-bottom:1px solid #e3e7df}.ds-tabs button{background:transparent;border:0;border-bottom:2px solid transparent;padding:9px 0 10px;min-height:42px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted,#5e6c63);cursor:pointer}.ds-tabs button[aria-selected=true]{color:var(--forest,#245747);border-bottom-color:var(--forest,#245747);font-weight:650}.ds-tabs button:hover{color:var(--forest,#245747)}.ds-tabs button:focus-visible{outline:3px solid #408268;outline-offset:4px}"
+    },
+    {
+      "name": "Quiz answer",
+      "kind": "button",
+      "refersTo": "quiz-answer",
+      "description": "Compact illustrative practice choice; selected fill is sage.",
+      "html": "<button class=\"ds-answer\" aria-pressed=\"true\">Mitochondria <span aria-hidden=\"true\">✓</span></button>",
+      "css": ".ds-answer{display:flex;align-items:center;justify-content:space-between;min-height:36px;width:100%;background:transparent;border:1px solid var(--border,#a8b3a9);border-radius:4px;padding:6px 10px;color:var(--ink,#202a25);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer}.ds-answer:hover,.ds-answer[aria-pressed=true]{border-color:var(--forest,#245747);background:var(--sage,#e9efe6)}.ds-answer:focus-visible{outline:3px solid #408268;outline-offset:4px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Green and paper",
+    "overview": "The approved visual world pairs forest green, warm white, charcoal, an outlined book mark, serif headings, and readable sans-serif controls. It feels like a calm personal study space: generous breathing room around the form, with denser study material inside the desktop preview.\n\nThe study material itself supplies the illustration. It is built from text, CSS, and inline SVG rather than generated images. This document captures the implemented login and signup frontend; it does not establish a visual system for screens that have not been built.",
+    "keyCharacteristics": [
+      "Warm paper and pale sage surfaces.",
+      "Forest green actions and understated book imagery.",
+      "Serif headlines with clear sans-serif controls.",
+      "A study preview on desktop and a form-first mobile layout."
+    ],
+    "rules": [
+      {
+        "name": "The Paper Rule",
+        "body": "Keep the form directly on the warm paper surface and reserve the lifted sheet treatment for the study preview.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do retain the approved forest, sage, and paper palette and the serif/sans-serif relationship.",
+      "Do preserve visible focus, linked inline errors, reduced-motion support, and the existing control targets.",
+      "Do prioritize the form at and below the implemented mobile breakpoint.",
+      "Do label illustrative study content and pending account integration honestly."
+    ],
+    "donts": [
+      "Don't replace the approved visual world or introduce generated imagery for this auth surface.",
+      "Don't add authentication success, saved-progress claims, social login, or recovery controls before the corresponding capabilities exist.",
+      "Don't wrap the form in a second floating card or apply the study-sheet rotation to controls."
+    ]
+  }
+}
