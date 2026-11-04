@@ -8,13 +8,13 @@ Use a single Spring Boot application with controller, service, repository, and e
 
 ## Folder layout
 
-- `src/frontend/`: planned Vite React JavaScript application.
-- `src/backend/`: planned Spring Boot Maven project.
-- `tests/`: shared manual acceptance checklist; generated Java tests belong in `src/backend/src/test/java`.
+- `frontend/memoria/`: planned Vite React JavaScript application.
+- `backend/memoria/`: planned Spring Boot Maven project.
+- `tests/`: shared manual acceptance checklist; generated Java tests belong in `backend/memoria/src/test/java`.
 - `docs/`: requirements, architecture, backlog, plans, and evidence.
 - `.github/`: GitHub issue and pull request templates.
 
-Only placeholder/configuration files are present in source folders. Generate the application scaffolds before using run commands.
+The frontend and backend scaffolds are present. See the [backend run guide](../backend/memoria/README.md) for startup and health verification. Application features below remain planned.
 
 ## Local configuration
 
@@ -36,14 +36,14 @@ Configure Spring using `application.properties`, with environment overrides:
 server.port=${SERVER_PORT:8080}
 spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:h2:file:./data/memoria}
 spring.datasource.username=${SPRING_DATASOURCE_USERNAME:sa}
-spring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:}
 spring.jpa.hibernate.ddl-auto=update
 spring.h2.console.enabled=false
 server.servlet.session.cookie.http-only=true
 server.servlet.session.cookie.same-site=lax
 ```
 
-Set `SPRING_DATASOURCE_PASSWORD` in the backend run configuration before starting. `ddl-auto=update` is only a local prototype convenience. A root `.env` is not loaded automatically; Vite separately reads `src/frontend/.env.local`. Variables beginning `VITE_` are browser-visible and must contain no secrets.
+The local H2 default uses an empty password. The optional `mysql` profile requires `SPRING_DATASOURCE_PASSWORD`; see the backend run guide. `ddl-auto=update` is only a local prototype convenience. A root `.env` is not loaded automatically; Vite separately reads `frontend/memoria/.env.local`. Variables beginning `VITE_` are browser-visible and must contain no secrets.
 
 ## Sessions and authorization
 

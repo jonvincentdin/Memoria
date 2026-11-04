@@ -49,23 +49,14 @@ Everyone is a Software Developer. Feature ownership and peer review assignments 
 
 ## Local setup
 
-**The application scaffolds have not been generated yet.** The ZIP intentionally contains no `package.json`, `pom.xml`, or runnable application. Complete these initial steps as the first team task:
+The React/Vite scaffold is in `frontend/memoria`; the Spring Boot scaffold is in `backend/memoria`. Features remain planned.
 
-1. Install a supported Node.js LTS release, a Java LTS release compatible with the Spring Boot version selected in Spring Initializr, Maven, and Git.
-2. Extract this folder and follow [repository setup](docs/repository-setup.md) to initialize a private `memoria` repository.
-3. From the repository root, create the React JavaScript scaffold:
+1. Install Node.js LTS and a JDK 17 or newer.
+2. In `backend/memoria`, run `.\mvnw.cmd spring-boot:run` (PowerShell) or `sh ./mvnw spring-boot:run` (macOS/Linux). The Maven wrapper downloads Maven automatically.
+3. Check http://localhost:8080/actuator/health for `{"status":"UP"}`. The default H2 database needs no separate server.
+4. In a second terminal, run `npm install` and `npm run dev` from `frontend/memoria`. Open the address printed by Vite.
 
-   ```bash
-   npm create vite@latest src/frontend -- --template react
-   cd src/frontend
-   npm install
-   ```
-
-   `src/frontend` currently contains `.env.example`. If Vite prompts because the folder is not empty, choose **Ignore files and continue** to preserve it. Commit the generated lockfile.
-4. At [Spring Initializr](https://start.spring.io/), generate a Maven/Java project with group `com.memoria`, artifact `backend`, and dependencies Spring Web, Spring Security, Spring Data JPA, Validation, and H2 Database. Extract the generated project's contents into `src/backend` so `src/backend/pom.xml` exists directly.
-5. Copy the root `.env.example` to a local `.env` for reference. Copy `src/frontend/.env.example` to `src/frontend/.env.local`. Configure Spring as described in [architecture](docs/architecture.md). Spring Boot does not automatically load a root `.env` file.
-6. Once configuration and a minimal application exist, run the backend in `src/backend` with `mvn spring-boot:run` and the frontend in `src/frontend` with `npm run dev` in separate terminals.
-7. Open the frontend address printed by Vite (normally `http://localhost:5173`). The backend uses `http://localhost:8080`. Implement and verify features through reviewed pull requests.
+See the [backend run guide](backend/memoria/README.md) for tests, packaging, and optional MySQL configuration.
 
 ## Collaboration
 
