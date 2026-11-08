@@ -1,4 +1,4 @@
-package com.csit321section.lukydizy.memoria;
+package com.csit321g1.lukydizy.memoria;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
