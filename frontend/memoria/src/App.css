@@ -79,12 +79,6 @@ form { margin-top: 32px; }
 @media (max-width: 1050px) and (min-width: 901px) { .story-panel { padding-inline: 32px; } .form-panel { padding-inline: 36px; } .story-content h2 { font-size: 34px; } .desktop-break { display: none; } .preview-caption { display: none; } .study-preview { margin-right: 0; } .preview-content { padding-inline: 18px; } .form-intro h1 { font-size: 38px; } .reviewer-list > div { gap: 8px; } .reviewer-list dt { flex-basis: 75px; } }
 @media (max-width: 900px) { .auth-layout { display: block; } .story-panel { display: none; } .form-panel { min-height: 100svh; padding: 30px 24px 24px; } .mobile-brand { display: inline-flex; } .brand > span { font-size: 28px; } .top-link { display: none; } .auth-form-content, .signup .auth-form-content { max-width: 390px; padding: 64px 0 44px; } .form-intro h1 { font-size: 40px; } .signup .form-intro h1 { max-width: 310px; } .form-footer { margin-top: auto; } .signup .auth-form-content { padding-top: 44px; } .preview-notice { margin-top: 30px; } }
 @media (max-width: 360px) { .form-panel { padding-inline: 20px; } .form-intro h1 { font-size: 36px; } }
-.forgot-link { margin: -8px 0 0; text-align: right; font-size: 12px; }
-.forgot-link a { font-weight: 600; }
-a.submit-button { text-decoration: none; }
-.reset-note { margin-top: 28px; padding: 13px 16px; background: #f0f3e9; border-radius: 3px; font-size: 12px; line-height: 1.7; color: #52604f; }
-.reset-note p { margin: 0; }
-.link-button { background: none; border: 0; padding: 0; color: var(--forest); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; font-size: inherit; }
 .dashboard { min-height: 100svh; display: flex; flex-direction: column; }
 .dash-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px clamp(16px, 5vw, 80px); background: var(--sage); }
 .dash-account { display: flex; align-items: center; gap: 16px; min-width: 0; }

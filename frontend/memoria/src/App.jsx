@@ -9,12 +9,40 @@ function Eye({ visible }) {
   return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5"/>{visible && <path d="m4 3 16 18" stroke="currentColor" strokeWidth="1.5"/>}</svg>
 }
 
-const ROUTES = { '#/signup': 'signup', '#/reset-password': 'reset', '#/dashboard': 'dashboard' }
+const ROUTES = { '#/signup': 'signup', '#/dashboard': 'dashboard' }
 const getMode = () => ROUTES[window.location.hash] || 'login'
-const SESSION_KEY = 'memoria.previewSession'
-function readSession() { try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)) } catch { return null } }
-function startSession(user) { try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(user)) } catch { /* storage unavailable */ } window.location.hash = '#/dashboard' }
-function endSession() { try { sessionStorage.removeItem(SESSION_KEY) } catch { /* storage unavailable */ } window.location.hash = '#/login' }
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080').replace(/\/$/, '')
+
+class ApiError extends Error {
+  constructor(message, status) {
+    super(message)
+    this.status = status
+  }
+}
+
+async function apiRequest(path, { method = 'GET', body } = {}) {
+  const headers = { Accept: 'application/json' }
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    const csrfResponse = await fetch(`${API_BASE}/api/auth/csrf`, {
+      credentials: 'include',
+      cache: 'no-store',
+    })
+    const csrf = await csrfResponse.json()
+    if (!csrfResponse.ok) throw new ApiError(csrf.error || 'Could not prepare a secure request.', csrfResponse.status)
+    headers[csrf.headerName] = csrf.token
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    method,
+    credentials: 'include',
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+  const payload = response.status === 204 ? null : await response.json()
+  if (!response.ok) throw new ApiError(payload?.error || 'The request could not be completed.', response.status)
+  return payload
+}
 
 function StudyPreview() {
   const [tab, setTab] = useState('Notes')
@@ -57,31 +85,54 @@ function Field({ name, label, type = 'text', error, hint, autoComplete, inputRef
   </div>
 }
 
-function AuthForm({ mode }) {
+function AuthForm({ mode, onAuthenticated }) {
   const signup = mode === 'signup'
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const firstField = useRef(null)
 
   useEffect(() => { document.title = `${signup ? 'Create account' : 'Log in'} · Memoria` }, [signup])
 
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault()
     const form = event.currentTarget
     const data = new FormData(form)
+    const name = String(data.get('name') ?? '').trim()
+    const email = String(data.get('email') ?? '').trim()
+    const password = String(data.get('password') ?? '')
+    const confirmation = String(data.get('confirmation') ?? '')
     const next = {}
-    if (signup && !data.get('name').trim()) next.name = 'Enter your name.'
-    if (!data.get('email').trim()) next.email = 'Enter your email address.'
+    if (signup && !name) next.name = 'Enter your name.'
+    if (!email) next.email = 'Enter your email address.'
     else if (!form.elements.email.validity.valid) next.email = 'Enter a valid email address, such as name@example.com.'
-    if (!data.get('password')) next.password = 'Enter your password.'
-    else if (signup && data.get('password').length < 8) next.password = 'Use at least 8 characters for your password.'
-    if (signup && !data.get('confirmation')) next.confirmation = 'Re-enter your password.'
-    else if (signup && data.get('password') !== data.get('confirmation')) next.confirmation = 'Your passwords don’t match. Try again.'
+    if (!password) next.password = 'Enter your password.'
+    else if (signup && password.length < 8) next.password = 'Use at least 8 characters for your password.'
+    if (signup && !confirmation) next.confirmation = 'Re-enter your password.'
+    else if (signup && password !== confirmation) next.confirmation = 'Your passwords don’t match. Try again.'
     setErrors(next)
     setStatus('')
     const invalid = Object.keys(next)[0]
-    if (invalid) form.elements[invalid].focus()
-    else startSession({ name: signup ? data.get('name').trim() : '', email: data.get('email').trim() })
+    if (invalid) {
+      form.elements[invalid].focus()
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const user = await apiRequest(`/api/auth/${signup ? 'register' : 'login'}`, {
+        method: 'POST',
+        body: signup ? { name, email, password } : { email, password },
+      })
+      onAuthenticated(user)
+      window.location.hash = '#/dashboard'
+    } catch (error) {
+      setStatus(error instanceof ApiError
+        ? error.message
+        : 'Memoria could not be reached. Check your connection and try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   function clearError(event) {
@@ -97,70 +148,11 @@ function AuthForm({ mode }) {
       <Field name="email" label="Email address" type="email" autoComplete="email" error={errors.email} inputRef={signup ? undefined : firstField} maxLength={254} />
       <Field name="password" label="Password" type="password" autoComplete={signup ? 'new-password' : 'current-password'} hint={signup ? 'Use at least 8 characters.' : undefined} error={errors.password} />
       {signup && <Field name="confirmation" label="Confirm password" type="password" autoComplete="new-password" error={errors.confirmation} />}
-      {!signup && <p className="forgot-link"><a href="#/reset-password">Forgot your password?</a></p>}
-      <button className="submit-button" type="submit">{signup ? 'Create account' : 'Log in'}<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
-      <p className="form-status" role="status">{status}</p>
+      <button className="submit-button" type="submit" disabled={submitting}>{submitting ? 'Working…' : signup ? 'Create account' : 'Log in'}<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
+      <p className="form-status" role="alert">{status}</p>
     </form>
     <p className="switch-mode">{signup ? 'Already have an account?' : 'New to Memoria?'} <a href={signup ? '#/login' : '#/signup'}>{signup ? 'Log in' : 'Create an account'}</a></p>
-    <div className="preview-notice"><span className="notice-dot" /> Design preview <span>Nothing is sent to a server. Your session lives only in this tab.</span></div>
-  </div>
-}
-
-const Arrow = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-
-function ResetPasswordForm() {
-  const [step, setStep] = useState('request')
-  const [email, setEmail] = useState('')
-  const [errors, setErrors] = useState({})
-  const intro = {
-    request: ['Let’s get you back in.', 'Enter the email you signed up with and we’ll send a link to reset your password.'],
-    choose: ['Choose a new password.', `Resetting the password for ${email}.`],
-    done: ['You’re all set.', 'Your password has been updated. Log in with your new password.'],
-  }[step]
-
-  useEffect(() => { document.title = 'Reset password · Memoria' }, [])
-
-  function submit(event) {
-    event.preventDefault()
-    const form = event.currentTarget
-    const data = new FormData(form)
-    const next = {}
-    if (step === 'request') {
-      if (!data.get('email').trim()) next.email = 'Enter your email address.'
-      else if (!form.elements.email.validity.valid) next.email = 'Enter a valid email address, such as name@example.com.'
-    } else {
-      if (!data.get('password')) next.password = 'Enter a new password.'
-      else if (data.get('password').length < 8) next.password = 'Use at least 8 characters for your password.'
-      if (!data.get('confirmation')) next.confirmation = 'Re-enter your new password.'
-      else if (data.get('password') !== data.get('confirmation')) next.confirmation = 'Your passwords don’t match. Try again.'
-    }
-    setErrors(next)
-    const invalid = Object.keys(next)[0]
-    if (invalid) return form.elements[invalid].focus()
-    if (step === 'request') { setEmail(data.get('email').trim()); setStep('sent') } else setStep('done')
-  }
-
-  const clearError = (event) => setErrors((current) => ({ ...current, [event.target.name]: undefined }))
-
-  return <div className="auth-form-content">
-    {step === 'sent' ? <>
-      <div className="form-intro"><h1>Check your inbox.</h1><p>If an account exists for <strong>{email}</strong>, a reset link is on its way. It may take a minute to arrive.</p></div>
-      <div className="reset-note"><span className="note-heading">Design preview</span><p>Email isn’t connected yet, so no message was sent. Continue to see the next step.</p></div>
-      <button className="submit-button" type="button" onClick={() => setStep('choose')}>Open reset link<Arrow /></button>
-      <p className="switch-mode">Wrong email? <button className="link-button" type="button" onClick={() => setStep('request')}>Try a different one</button></p>
-    </> : <>
-      <div className="form-intro"><h1>{intro[0]}</h1><p>{intro[1]}</p></div>
-      {step === 'done'
-        ? <a className="submit-button" href="#/login">Back to log in<Arrow /></a>
-        : <form noValidate onSubmit={submit} onChange={clearError} key={step}>
-          {step === 'request'
-            ? <Field name="email" label="Email address" type="email" autoComplete="email" error={errors.email} maxLength={254} />
-            : <><Field name="password" label="New password" type="password" autoComplete="new-password" hint="Use at least 8 characters." error={errors.password} /><Field name="confirmation" label="Confirm new password" type="password" autoComplete="new-password" error={errors.confirmation} /></>}
-          <button className="submit-button" type="submit">{step === 'request' ? 'Send reset link' : 'Update password'}<Arrow /></button>
-        </form>}
-      {step !== 'done' && <p className="switch-mode">Remembered it? <a href="#/login">Log in</a></p>}
-    </>}
-    <div className="preview-notice"><span className="notice-dot" /> Design preview <span>Password recovery isn’t connected yet. Nothing is sent or saved.</span></div>
+    <div className="preview-notice"><span className="notice-dot" /> Secure account <span>Your password is hashed before storage and never returned.</span></div>
   </div>
 }
 
@@ -170,17 +162,33 @@ const STUDY_SETS = [
   { subject: 'Chemistry', title: 'Bonds and reactions', notes: 5, progress: 15 },
 ]
 
-function Dashboard({ user }) {
+function Dashboard({ user, onLogout }) {
+  const [logoutError, setLogoutError] = useState('')
+  const [loggingOut, setLoggingOut] = useState(false)
   const name = user.name || user.email.split('@')[0]
   useEffect(() => { document.title = 'Dashboard · Memoria' }, [])
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
+  async function handleLogout() {
+    setLogoutError('')
+    setLoggingOut(true)
+    try {
+      await onLogout()
+    } catch (error) {
+      setLogoutError(error instanceof ApiError
+        ? error.message
+        : 'Memoria could not be reached. Check your connection and try again.')
+    } finally {
+      setLoggingOut(false)
+    }
+  }
+
   return <div className="dashboard">
     <header className="dash-header">
       <a className="brand" href="#/dashboard" aria-label="Memoria dashboard"><BookMark /><span>memoria<span className="brand-period">.</span></span></a>
       <div className="dash-account">
         <span className="dash-user"><span className="avatar" aria-hidden="true">{name[0].toUpperCase()}</span><span className="dash-email">{user.email}</span></span>
-        <button className="logout-button" type="button" onClick={endSession}>Log out<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
+        <button className="logout-button" type="button" onClick={handleLogout} disabled={loggingOut}>{loggingOut ? 'Logging out…' : 'Log out'}<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
       </div>
     </header>
     <main className="dash-main" id="auth-main" tabIndex="-1">
@@ -188,6 +196,7 @@ function Dashboard({ user }) {
         <h1>{greeting}, {name}.</h1>
         <p>Pick up where you left off, or start something new.</p>
       </section>
+      {logoutError && <p className="form-status" role="alert">{logoutError}</p>}
       <section className="dash-stats" aria-label="This week">
         {[['28', 'Notes written'], ['3', 'Study sets'], ['84%', 'Quiz accuracy']].map(([value, label]) => <div key={label} className="stat"><span className="stat-value">{value}</span><span className="stat-label">{label}</span></div>)}
       </section>
@@ -202,25 +211,58 @@ function Dashboard({ user }) {
           </li>)}
         </ul>
       </section>
-      <div className="preview-notice"><span className="notice-dot" /> Design preview <span>Study sets shown here are examples. Your session lives only in this browser tab.</span></div>
+      <div className="preview-notice"><span className="notice-dot" /> Signed in <span>Study sets shown here are examples; your account is connected to Memoria.</span></div>
     </main>
   </div>
 }
 
 function App() {
   const [mode, setMode] = useState(getMode)
+  const [user, setUser] = useState(null)
+  const [sessionLoaded, setSessionLoaded] = useState(false)
+  const [sessionError, setSessionError] = useState('')
   const headingRef = useRef(null)
+
   useEffect(() => {
     function navigate() { setMode(getMode()); window.scrollTo(0, 0); requestAnimationFrame(() => (headingRef.current || document.getElementById('auth-main'))?.focus()) }
     window.addEventListener('hashchange', navigate)
     return () => window.removeEventListener('hashchange', navigate)
   }, [])
-  const session = readSession()
+
   useEffect(() => {
-    if (mode === 'dashboard' && !session) window.location.replace('#/login')
-    else if ((mode === 'login' || mode === 'signup') && session) window.location.replace('#/dashboard')
-  }, [mode, session])
-  if (mode === 'dashboard') return session ? <Dashboard user={session} /> : null
+    let active = true
+    apiRequest('/api/auth/me')
+      .then((profile) => {
+        if (active) setUser(profile)
+      })
+      .catch((error) => {
+        if (!active) return
+        setUser(null)
+        if (!(error instanceof ApiError && error.status === 401)) {
+          setSessionError(error instanceof ApiError
+            ? error.message
+            : 'Could not verify your session. Check your connection and try again.')
+        }
+      })
+      .finally(() => {
+        if (active) setSessionLoaded(true)
+      })
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    if (!sessionLoaded) return
+    if (mode === 'dashboard' && !user) window.location.replace('#/login')
+    else if ((mode === 'login' || mode === 'signup') && user) window.location.replace('#/dashboard')
+  }, [mode, user, sessionLoaded])
+
+  async function logout() {
+    await apiRequest('/api/auth/logout', { method: 'POST' })
+    setUser(null)
+    window.location.replace('#/login')
+  }
+
+  if (mode === 'dashboard') return sessionLoaded && user ? <Dashboard user={user} onLogout={logout} /> : null
   return <div className={`auth-layout ${mode}`}>
     <a className="skip-link" href="#auth-main" onClick={(event) => {
       event.preventDefault()
@@ -235,7 +277,15 @@ function App() {
     <main className="form-panel" id="auth-main" ref={headingRef} tabIndex="-1">
       <a className="brand mobile-brand" href="#/login" aria-label="Memoria log in"><BookMark /><span>memoria.</span></a>
       <div className="top-link"><span>{mode === 'login' ? 'A new chapter?' : 'Already part of Memoria?'} </span><a href={mode === 'login' ? '#/signup' : '#/login'}>{mode === 'login' ? 'Join Memoria' : 'Log in'}<span aria-hidden="true"> ↗</span></a></div>
-      {mode === 'reset' ? <ResetPasswordForm /> : <AuthForm key={mode} mode={mode} />}
+      {sessionError && <p className="form-status" role="alert">{sessionError}</p>}
+      <AuthForm
+        key={mode}
+        mode={mode}
+        onAuthenticated={(profile) => {
+          setUser(profile)
+          setSessionError('')
+        }}
+      />
       <footer className="form-footer">A little progress, every day.</footer>
     </main>
   </div>
