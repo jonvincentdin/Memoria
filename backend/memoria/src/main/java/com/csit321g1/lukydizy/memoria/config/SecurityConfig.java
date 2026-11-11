@@ -12,6 +12,15 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
+import org.springframework.security.web.authentication.session.CompositeSessionAuthenticationStrategy;
+import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,14 +36,40 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public CsrfTokenRepository csrfTokenRepository() {
+        return new HttpSessionCsrfTokenRepository();
+    }
+
+    @Bean
+    public SecurityContextRepository securityContextRepository() {
+        return new HttpSessionSecurityContextRepository();
+    }
+
+    @Bean
+    public SessionAuthenticationStrategy sessionAuthenticationStrategy(CsrfTokenRepository csrfTokenRepository) {
+        return new CompositeSessionAuthenticationStrategy(List.of(
+            new ChangeSessionIdAuthenticationStrategy(),
+            new CsrfAuthenticationStrategy(csrfTokenRepository)
+        ));
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(
+        HttpSecurity http,
+        CsrfTokenRepository csrfTokenRepository,
+        SecurityContextRepository securityContextRepository
+    ) throws Exception {
         http
             .cors(cors -> {
                 cors.configurationSource(corsConfigurationSource());
             })
-            // CSRF is ON; allow login/register without a pre-existing token
             .csrf(csrf -> {
-                csrf.ignoringRequestMatchers("/api/auth/login", "/api/auth/register");
+                csrf.csrfTokenRepository(csrfTokenRepository);
+            })
+            .securityContext(context -> {
+                context
+                    .securityContextRepository(securityContextRepository)
+                    .requireExplicitSave(true);
             })
             .authorizeHttpRequests(auth -> {
                 auth
@@ -46,6 +81,13 @@ public class SecurityConfig {
                     ).permitAll()
                     .requestMatchers("/api/**").authenticated()
                     .anyRequest().permitAll();
+            })
+            .logout(logout -> {
+                logout
+                    .logoutUrl("/api/auth/logout")
+                    .invalidateHttpSession(true)
+                    .deleteCookies("JSESSIONID")
+                    .logoutSuccessHandler(jsonLogoutSuccessHandler());
             })
             // Return JSON 401 instead of a redirect to a login page
             .exceptionHandling(ex -> {
@@ -66,6 +108,14 @@ public class SecurityConfig {
             .httpBasic(AbstractHttpConfigurer::disable);
 
         return http.build();
+    }
+
+    private LogoutSuccessHandler jsonLogoutSuccessHandler() {
+        return (request, response, authentication) -> {
+            response.setStatus(HttpStatus.OK.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.getWriter().write("{\"message\":\"Logged out\"}");
+        };
     }
 
     @Bean

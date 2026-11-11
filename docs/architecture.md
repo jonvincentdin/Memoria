@@ -4,7 +4,7 @@
 
 React JavaScript browser UI → Spring Boot REST API → Supabase PostgreSQL database (hosted).
 
-Use a single Spring Boot application with controller, service, repository, and entity packages. React has pages/components and one small API helper; avoid extra architectural layers. The Supabase PostgreSQL database persists data between backend restarts and is shared across the team. Run one backend instance and use sample data only. A local PostgreSQL database is supported as a backup; see `SETUP.md` at the repo root.
+Use a single Spring Boot application with controller, service, repository, and entity packages. React has pages/components and one small API helper; avoid extra architectural layers. The Supabase PostgreSQL database persists data between backend restarts and is shared across the team. Run one backend instance and use sample data only. A local PostgreSQL database is supported as a backup; see `SETUP.md` at the repo root. Account registration, login, logout, and current-user lookup are implemented; note and quiz APIs remain planned.
 
 ## Folder layout
 
@@ -47,7 +47,9 @@ The default profile connects to a local PostgreSQL instance. Activate `supabase`
 
 ## Sessions and authorization
 
-Use Spring Security session authentication with BCrypt. Provide registration, form-encoded login handled by Spring Security at `/api/auth/login`, logout, and current-user endpoints. Add a small `/api/auth/csrf` endpoint returning the session CSRF token's value and header name; load it before each modifying request, including login/logout, and reload after authentication changes. Keep CSRF protection enabled and configure API failures as JSON 401/403 rather than HTML redirects. Keep secure cookies enabled if HTTPS hosting is later added.
+Authentication uses Spring Security sessions and BCrypt. `POST /api/auth/register` accepts a JSON name, email, and password and starts a session; `POST /api/auth/login` accepts a JSON email and password; `POST /api/auth/logout` invalidates the session; and `GET /api/auth/me` returns the authenticated user's ID, name, email, and creation time without the password hash. Email is normalized to lowercase and unique in the database.
+
+CSRF protection applies to all modifying requests. Fetch `GET /api/auth/csrf` before each POST and send its token in the returned header name, including registration, login, and logout. Authentication rotates the session ID and clears the old CSRF token; fetch a fresh token for the next modifying request. The session cookie is HttpOnly and SameSite=Lax. Set `SESSION_COOKIE_SECURE=true` when serving over HTTPS. API authentication failures are JSON 401 and CSRF/access failures are JSON 403, not HTML redirects.
 
 Derive the user ID from the authenticated session. Repository/service queries must combine resource ID with owner ID. Never accept client-supplied ownership or trust a frontend-only access check.
 
@@ -55,7 +57,7 @@ Derive the user ID from the authenticated session. Repository/service queries mu
 
 | Entity | Main fields | Relationships |
 | --- | --- | --- |
-| User | id, name, email (unique), passwordHash | Owns notes, reviewers, quizzes, attempts |
+| User | UserID, Name, Email (unique, lowercase), PasswordHash (BCrypt), CreatedAt | Owns notes, reviewers, quizzes, attempts |
 | Note | id, ownerId, title, body, updatedAt | User → many notes |
 | Reviewer | id, ownerId, noteId, title, body | Note → many reviewers |
 | Quiz | id, ownerId, reviewerId, title | Reviewer → many quizzes |
@@ -85,4 +87,4 @@ Check that parent objects belong to the same user. Save a quiz and its questions
 | GET /api/attempts | Personal history |
 | GET /api/attempts/{id} | Saved result and answer review |
 
-These are implementation contracts, not existing endpoints. No external AI API, cloud service, or messaging system is needed.
+Authentication routes above are implemented. The remaining routes are implementation contracts, not existing endpoints. No external AI API, cloud service, or messaging system is needed.
