@@ -4,7 +4,7 @@
 
 React JavaScript browser UI → Spring Boot REST API → Supabase PostgreSQL database (hosted).
 
-Use a single Spring Boot application with controller, service, repository, and entity packages. React has pages/components and one small API helper; avoid extra architectural layers. The Supabase PostgreSQL database persists data between backend restarts and is shared across the team. Run one backend instance and use sample data only. A local PostgreSQL database is supported as a backup; see `backend/memoria/src/SETUP.md`.
+Use a single Spring Boot application with controller, service, repository, and entity packages. React has pages/components and one small API helper; avoid extra architectural layers. The Supabase PostgreSQL database persists data between backend restarts and is shared across the team. Run one backend instance and use sample data only. A local PostgreSQL database is supported as a backup; see `SETUP.md` at the repo root.
 
 ## Folder layout
 

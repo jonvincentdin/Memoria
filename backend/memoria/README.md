@@ -17,7 +17,7 @@ Open http://localhost:8080/actuator/health. A healthy backend returns HTTP 200 w
 
 The backend connects to **Supabase PostgreSQL** (hosted, team-shared) as the primary database. A local PostgreSQL instance is supported as a backup option.
 
-**Follow [`src/SETUP.md`](src/SETUP.md) for step-by-step setup instructions for both options.**
+**Follow [`SETUP.md`](../../SETUP.md) at the repo root for step-by-step setup instructions for both options.**
 
 Tests always use H2 in-memory — no PostgreSQL installation is needed to run `mvnw test`.
 

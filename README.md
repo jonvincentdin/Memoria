@@ -51,10 +51,11 @@ Everyone is a Software Developer. Feature ownership and peer review assignments 
 
 The React/Vite scaffold is in `frontend/memoria`; the Spring Boot scaffold is in `backend/memoria`. Features remain planned.
 
-1. Install Node.js LTS and a JDK 17 or newer.
-2. In `backend/memoria`, run `.\mvnw.cmd spring-boot:run` (PowerShell) or `sh ./mvnw spring-boot:run` (macOS/Linux). The Maven wrapper downloads Maven automatically.
-3. Check http://localhost:8080/actuator/health for `{"status":"UP"}`. The default H2 database needs no separate server.
-4. In a second terminal, run `npm install` and `npm run dev` from `frontend/memoria`. Open the address printed by Vite.
+1. Install Node.js LTS and a JDK 17 or newer. Install PostgreSQL locally or obtain Supabase credentials from a teammate.
+2. Follow [SETUP.md](SETUP.md) to configure your database (local PostgreSQL or Supabase) and set environment variables.
+3. In `backend/memoria`, run `.\mvnw.cmd spring-boot:run` (PowerShell) or `sh ./mvnw spring-boot:run` (macOS/Linux). The Maven wrapper downloads Maven automatically.
+4. Check http://localhost:8080/actuator/health for `{"status":"UP"}`.
+5. In a second terminal, run `npm install` and `npm run dev` from `frontend/memoria`. Open the address printed by Vite.
 
 See the [backend run guide](backend/memoria/README.md) for tests and packaging.
 
@@ -68,6 +69,7 @@ Keep `main` stable. Use `feature/<issue>-<short-name>` or `fix/<issue>-<short-na
 
 ## Documentation
 
+- [Database setup](SETUP.md)
 - [Requirements and scope](docs/requirements.md)
 - [Architecture and data model](docs/architecture.md)
 - [Team assignments](docs/team-roles.md)
