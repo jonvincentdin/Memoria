@@ -1,15 +1,52 @@
-﻿@font-face { font-family: 'DM Sans'; src: url('./assets/fonts/DMSans.ttf') format('truetype'); font-weight: 100 1000; font-display: swap; }
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@font-face { font-family: 'DM Sans'; src: url('./assets/fonts/DMSans.ttf') format('truetype'); font-weight: 100 1000; font-display: swap; }
 @font-face { font-family: 'DM Serif Display'; src: url('./assets/fonts/DMSerifDisplay-Regular.ttf') format('truetype'); font-weight: 400; font-display: swap; }
-:root { font-family: 'DM Sans', sans-serif; color: #202a25; background: #fafbf8; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; --paper: #fafbf8; --sage: #e9efe6; --forest: #245747; --ink: #202a25; --muted: #5e6c63; --border: #a8b3a9; --error: #a33131; }
-* { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; }
-button, input { font: inherit; }
-button, a, input { -webkit-tap-highlight-color: transparent; }
-button, a { touch-action: manipulation; }
-button { cursor: pointer; }
-a { color: var(--forest); text-underline-offset: 4px; }
-::selection { background: #cee0c9; color: #183e30; }
-:focus-visible { outline: 3px solid #408268; outline-offset: 4px; }
-input { caret-color: var(--forest); }
-button:disabled { cursor: wait; opacity: .6; }
+
+/* Memoria palette, mapped to shadcn/ui token names. --forest/--sage/--ink are kept for App.css. */
+:root {
+  --paper: #fafbf8; --sage: #e9efe6; --forest: #245747; --ink: #202a25; --error: #a33131;
+  --background: var(--paper); --foreground: var(--ink);
+  --card: #fffefb; --card-foreground: var(--ink);
+  --popover: #fffefb; --popover-foreground: var(--ink);
+  --primary: var(--forest); --primary-foreground: #ffffff;
+  --secondary: var(--sage); --secondary-foreground: var(--forest);
+  --muted: #eef2eb; --muted-foreground: #5e6c63;
+  --accent: #f0f3ec; --accent-foreground: var(--forest);
+  --destructive: var(--error);
+  --border: #e3e7df; --input: #a8b3a9; --ring: #408268;
+  --radius: 0.625rem;
+}
+
+@theme inline {
+  --font-sans: 'DM Sans', sans-serif; --font-heading: 'DM Serif Display', serif;
+  --color-background: var(--background); --color-foreground: var(--foreground);
+  --color-card: var(--card); --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover); --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary); --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent); --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border); --color-input: var(--input); --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) * 0.6); --radius-md: calc(var(--radius) * 0.8); --radius-lg: var(--radius); --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/* In the base layer so Tailwind utilities can override them; App.css stays unlayered and still wins on the auth pages. */
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  html { @apply font-sans; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body { @apply bg-background text-foreground; margin: 0; min-width: 320px; }
+  button, a, input { -webkit-tap-highlight-color: transparent; }
+  button, a { touch-action: manipulation; }
+  button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
+  a { color: var(--forest); text-underline-offset: 4px; }
+  ::selection { background: #cee0c9; color: #183e30; }
+  :focus-visible { outline: 3px solid var(--ring); outline-offset: 4px; }
+  input { caret-color: var(--forest); }
+  button:disabled { cursor: wait; opacity: .6; }
+}
+
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
