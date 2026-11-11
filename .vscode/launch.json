@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot - MemoriaApplication (Local PostgreSQL)",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/backend/memoria",
+            "mainClass": "com.csit321g1.lukydizy.memoria.MemoriaApplication",
+            "projectName": "memoria",
+            "args": "",
+            "env": {
+                "SPRING_DATASOURCE_PASSWORD": "memoria"
+            }
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot - MemoriaApplication (Supabase)",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/backend/memoria",
+            "mainClass": "com.csit321g1.lukydizy.memoria.MemoriaApplication",
+            "projectName": "memoria",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env.local"
+        }
+    ]
+}

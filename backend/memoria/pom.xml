@@ -8,7 +8,7 @@
 		<version>4.1.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.csit321section.lukydizy</groupId>
+	<groupId>com.csit321g1.lukydizy</groupId>
 	<artifactId>memoria</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>memoria</name>

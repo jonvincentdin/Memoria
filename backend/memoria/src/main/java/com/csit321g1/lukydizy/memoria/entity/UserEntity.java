@@ -24,6 +24,9 @@ public class UserEntity {
     private String passwordHash;
 
     
+    public UserEntity() {
+    }
+
     public UserEntity(String name, String email, String passwordHash, LocalDateTime createdAt) {
         this.name = name;
         this.email = email;
@@ -32,6 +35,12 @@ public class UserEntity {
     }
     
     // MUTATORS
+    public void setId(String id) {
+        this.id = id;
+    }
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
     public void setName(String name) {
         this.name = name;
     }
@@ -43,6 +52,12 @@ public class UserEntity {
     }
 
     // ACCESSORS
+    public String getId() {
+        return id;
+    }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
     public String getName() {
         return name;
     }
