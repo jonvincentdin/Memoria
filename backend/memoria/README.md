@@ -13,27 +13,31 @@ On macOS/Linux use `sh ./mvnw` in place of `.\mvnw.cmd`.
 
 Open http://localhost:8080/actuator/health. A healthy backend returns HTTP 200 with `{"status":"UP"}`. The root URL has no page yet and returns 404; application features remain planned.
 
-The default development database is H2, persisted in the ignored `data/` directory. No MySQL installation is needed. Run one backend instance at a time. Tests use a separate in-memory database. Stop the server with Ctrl+C.
+## Database
 
-To build and run a standalone application:
+The backend connects to **Supabase PostgreSQL** (hosted, team-shared) as the primary database. A local PostgreSQL instance is supported as a backup option.
+
+**Follow [`src/SETUP.md`](src/SETUP.md) for step-by-step setup instructions for both options.**
+
+Tests always use H2 in-memory — no PostgreSQL installation is needed to run `mvnw test`.
+
+## Environment variables
+
+Set these before starting the backend:
+
+| Variable | Description |
+|----------|-------------|
+| `SPRING_DATASOURCE_URL` | JDBC connection string |
+| `SPRING_DATASOURCE_USERNAME` | Database username |
+| `SPRING_DATASOURCE_PASSWORD` | Database password |
+| `SPRING_PROFILES_ACTIVE` | Set to `supabase` for the hosted database |
+| `SERVER_PORT` | Overrides the default port `8080` |
+
+Copy `.env.example` (repo root) to `.env.local` as a reference. Never commit real passwords.
+
+## To build and run a standalone JAR
 
 ```powershell
 .\mvnw.cmd package
 java -jar target/memoria-0.0.1-SNAPSHOT.jar
 ```
-
-## Optional MySQL
-
-Create a `memoria` database and a database user first. Set these environment variables in the same terminal before starting:
-
-```powershell
-$env:SPRING_PROFILES_ACTIVE = 'mysql'
-$env:SPRING_DATASOURCE_URL = 'jdbc:mysql://localhost:3306/memoria'
-$env:SPRING_DATASOURCE_USERNAME = 'memoria'
-$env:SPRING_DATASOURCE_PASSWORD = '<your local password>'
-.\mvnw.cmd spring-boot:run
-```
-
-Use your actual connection details. Hibernate detects the dialect automatically. Keep passwords out of tracked files. To return to H2, open a fresh terminal or remove these overrides. Spring does not load `.env` files automatically.
-
-`SERVER_PORT` overrides the default 8080 port. Schema updates (`ddl-auto=update`) are intended for this local prototype. Authentication and the planned study APIs are not implemented yet.

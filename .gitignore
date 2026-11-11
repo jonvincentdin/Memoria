@@ -1,3 +1,11 @@
 # Local visual review artifacts
 .taste-skill/
 .impeccable/review/
+
+# Environment secret files – never commit real credentials
+.env
+.env.local
+.env.*.local
+
+# H2 / local database files
+data/

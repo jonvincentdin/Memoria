@@ -2,7 +2,7 @@
 
 ## Proposal summary
 
-Memoria helps students organize personal study notes, prepare reviewers, and practice multiple-choice quizzes with saved scores. The subject version replaces the inspiration project's Next.js/TypeScript stack with React JavaScript and Spring Boot Java. It deliberately limits the product to a local demonstration with manual content entry.
+Memoria helps students organize personal study notes, prepare reviewers, and practice multiple-choice quizzes with saved scores. The subject version replaces the inspiration project's Next.js/TypeScript stack with React JavaScript and Spring Boot Java backed by Supabase PostgreSQL. It deliberately limits the product to a team-shared demonstration database with manual content entry.
 
 ## Scope and modules
 

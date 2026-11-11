@@ -1,4 +1,4 @@
-# memoria
+﻿# memoria
 
 Turn scattered notes into structured knowledge.
 
@@ -30,7 +30,7 @@ Excluded: direct AI API integration, Google Drive/Notion connections, document p
 
 - Frontend: React with JavaScript, Vite, basic CSS, browser fetch.
 - Backend: Java with Spring Boot, Spring Web, Spring Security, and Spring Data JPA.
-- Database: H2 file database for a simple local classroom demonstration (proposed default).
+- Database: Supabase PostgreSQL (hosted, team-shared). Local PostgreSQL is supported as a backup. H2 is used only for running tests.
 - Authentication: Spring Security sessions and BCrypt password hashing.
 - Collaboration: GitHub and Trello.
 
@@ -56,7 +56,7 @@ The React/Vite scaffold is in `frontend/memoria`; the Spring Boot scaffold is in
 3. Check http://localhost:8080/actuator/health for `{"status":"UP"}`. The default H2 database needs no separate server.
 4. In a second terminal, run `npm install` and `npm run dev` from `frontend/memoria`. Open the address printed by Vite.
 
-See the [backend run guide](backend/memoria/README.md) for tests, packaging, and optional MySQL configuration.
+See the [backend run guide](backend/memoria/README.md) for tests and packaging.
 
 ## Collaboration
 

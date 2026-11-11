@@ -2,9 +2,9 @@
 
 ## Proposed design
 
-React JavaScript browser UI → Spring Boot REST API → local H2 file database.
+React JavaScript browser UI → Spring Boot REST API → Supabase PostgreSQL database (hosted).
 
-Use a single Spring Boot application with controller, service, repository, and entity packages. React has pages/components and one small API helper; avoid extra architectural layers. The H2 database keeps the classroom setup small and persists between backend restarts. Run one backend instance and use sample data only.
+Use a single Spring Boot application with controller, service, repository, and entity packages. React has pages/components and one small API helper; avoid extra architectural layers. The Supabase PostgreSQL database persists data between backend restarts and is shared across the team. Run one backend instance and use sample data only. A local PostgreSQL database is supported as a backup; see `backend/memoria/src/SETUP.md`.
 
 ## Folder layout
 
@@ -30,20 +30,20 @@ server: {
 
 Frontend calls `/api/...` using `credentials: 'include'`. Keep requests on the Vite origin through the proxy to avoid unnecessary CORS setup.
 
-Configure Spring using `application.properties`, with environment overrides:
+Configure Spring using `application.properties`, with environment overrides. Set the three `SPRING_DATASOURCE_*` environment variables before starting — see `backend/memoria/src/SETUP.md` for exact steps.
 
 ```properties
 server.port=${SERVER_PORT:8080}
-spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:h2:file:./data/memoria}
-spring.datasource.username=${SPRING_DATASOURCE_USERNAME:sa}
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/memoria}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:memoria}
 spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:}
 spring.jpa.hibernate.ddl-auto=update
-spring.h2.console.enabled=false
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 server.servlet.session.cookie.http-only=true
 server.servlet.session.cookie.same-site=lax
 ```
 
-The local H2 default uses an empty password. The optional `mysql` profile requires `SPRING_DATASOURCE_PASSWORD`; see the backend run guide. `ddl-auto=update` is only a local prototype convenience. A root `.env` is not loaded automatically; Vite separately reads `frontend/memoria/.env.local`. Variables beginning `VITE_` are browser-visible and must contain no secrets.
+The default profile connects to a local PostgreSQL instance. Activate `supabase` profile (`SPRING_PROFILES_ACTIVE=supabase`) to use the hosted Supabase database; the same three variables are still required. Tests always use H2 in-memory (`@ActiveProfiles("test")`). `ddl-auto=update` is a prototype convenience only. A root `.env` is not loaded automatically; Vite separately reads `frontend/memoria/.env.local`. Variables beginning `VITE_` are browser-visible and must contain no secrets.
 
 ## Sessions and authorization
 
