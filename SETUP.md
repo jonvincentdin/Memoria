@@ -24,15 +24,46 @@ Both use the same JDBC driver and Hibernate dialect. Switch between them with en
 
 Download and install from https://www.postgresql.org/download/ (keep the default port **5432**).
 
-### 2. Create the database and user
+### 2. Create the database and user using pgAdmin 4
 
-Open **psql** (or pgAdmin) and run:
+Follow these steps starting from your pgAdmin 4 main window:
 
+#### Step 2.1 — Connect to the PostgreSQL Server
+1. In the left **Object Explorer** panel, look under **Servers (1)**.
+2. Click or double-click **PostgreSQL 18** (or right-click it and select **Connect Server...**).
+3. When prompted, enter the password you created during PostgreSQL installation (for the `postgres` user) and click **OK**.
+   > *Note:* If you get a connection timeout error, ensure the Windows PostgreSQL service is running: press `Win + R`, type `services.msc`, locate `postgresql-x64-18` (or your version), right-click and choose **Start**.
+
+#### Step 2.2 — Open the Query Tool
+1. In the left tree, click on the server, expand **Databases**, and select the default database named **postgres**.
+2. From the top menu bar, click **Tools** → **Query Tool** (or press `Alt + Shift + Q`).
+
+#### Step 2.3 — Create the `memoria` database and role
+1. In the Query Editor panel, paste the following SQL commands:
+   ```sql
+   CREATE DATABASE memoria;
+   CREATE USER memoria WITH PASSWORD 'memoria';
+   GRANT ALL PRIVILEGES ON DATABASE memoria TO memoria;
+   ```
+2. Click the **Execute / Play button** (`▶`) on the toolbar (or press **F5**). You should see `Query returned successfully`.
+
+#### Step 2.4 — Grant public schema permissions
+1. In the left **Object Explorer**, right-click **Databases** and select **Refresh**. You will now see `memoria` in the list.
+2. Click on the **memoria** database to select it.
+3. Open a new Query Tool window for it (**Tools** → **Query Tool**).
+4. Paste and execute (**F5**):
+   ```sql
+   GRANT ALL ON SCHEMA public TO memoria;
+   ```
+5. You should see `Query returned successfully`. The local database is ready!
+
+---
+
+*(Alternative via CLI `psql`)*:
 ```sql
 CREATE DATABASE memoria;
-CREATE USER memoria WITH PASSWORD 'choose-a-local-password';
+CREATE USER memoria WITH PASSWORD 'memoria';
 GRANT ALL PRIVILEGES ON DATABASE memoria TO memoria;
--- PostgreSQL 15+: also grant schema access
 \c memoria
 GRANT ALL ON SCHEMA public TO memoria;
 ```
