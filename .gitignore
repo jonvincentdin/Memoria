@@ -9,3 +9,6 @@
 
 # H2 / local database files
 data/
+
+# Supabase CLI temp files
+supabase/.temp/
