@@ -3,7 +3,14 @@ package com.csit321g1.lukydizy.memoria.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.csit321g1.lukydizy.memoria.entity.UserEntity;
 import com.csit321g1.lukydizy.memoria.service.UserService;
@@ -22,7 +29,7 @@ public class UserController {
 
     //CREATE
     @PostMapping
-    public UserEntity create(UserEntity userEntity) {
+    public UserEntity create(@RequestBody UserEntity userEntity) {
         return service.create(userEntity);
     }
 
@@ -33,19 +40,19 @@ public class UserController {
     }
     
     @GetMapping("/{id}")
-    public UserEntity readById(String id) {
+    public UserEntity readById(@PathVariable("id") String id) {
         return service.readById(id);
     }
 
     //UPDATE
     @PutMapping("/{id}")
-    public UserEntity update(String id, UserEntity newDetails) {
+    public UserEntity update(@PathVariable("id") String id, @RequestBody UserEntity newDetails) {
         return service.update(id, newDetails);
     }
 
     //DELETE
     @DeleteMapping("/{id}")
-    public String delete(String id) {
+    public String delete(@PathVariable("id") String id) {
         return service.delete(id);
     }
 

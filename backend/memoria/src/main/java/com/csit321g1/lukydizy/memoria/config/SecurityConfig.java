@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -28,38 +29,41 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // CSRF is ON; allow the CSRF-token endpoint itself without a token.
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/auth/login", "/api/auth/register"))
-            .authorizeHttpRequests(auth -> auth
-                // Public endpoints
-                .requestMatchers(
-                    "/actuator/health",
-                    "/api/auth/csrf",
-                    "/api/auth/register",
-                    "/api/auth/login"
-                ).permitAll()
-                // Everything else under /api requires a session
-                .requestMatchers("/api/**").authenticated()
-                .anyRequest().permitAll()
-            )
+            .cors(cors -> {
+                cors.configurationSource(corsConfigurationSource());
+            })
+            // CSRF is ON; allow login/register without a pre-existing token
+            .csrf(csrf -> {
+                csrf.ignoringRequestMatchers("/api/auth/login", "/api/auth/register");
+            })
+            .authorizeHttpRequests(auth -> {
+                auth
+                    .requestMatchers(
+                        "/actuator/health",
+                        "/api/auth/csrf",
+                        "/api/auth/register",
+                        "/api/auth/login"
+                    ).permitAll()
+                    .requestMatchers("/api/**").authenticated()
+                    .anyRequest().permitAll();
+            })
             // Return JSON 401 instead of a redirect to a login page
-            .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((req, res, e) -> {
-                    res.setStatus(HttpStatus.UNAUTHORIZED.value());
-                    res.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                    res.getWriter().write("{\"error\":\"Unauthorized\"}");
-                })
-                .accessDeniedHandler((req, res, e) -> {
-                    res.setStatus(HttpStatus.FORBIDDEN.value());
-                    res.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                    res.getWriter().write("{\"error\":\"Forbidden\"}");
-                })
-            )
+            .exceptionHandling(ex -> {
+                ex
+                    .authenticationEntryPoint((req, res, e) -> {
+                        res.setStatus(HttpStatus.UNAUTHORIZED.value());
+                        res.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                        res.getWriter().write("{\"error\":\"Unauthorized\"}");
+                    })
+                    .accessDeniedHandler((req, res, e) -> {
+                        res.setStatus(HttpStatus.FORBIDDEN.value());
+                        res.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                        res.getWriter().write("{\"error\":\"Forbidden\"}");
+                    });
+            })
             // No form login or HTTP Basic — session-based, controlled by /api/auth
-            .formLogin(fl -> fl.disable())
-            .httpBasic(hb -> hb.disable());
+            .formLogin(AbstractHttpConfigurer::disable)
+            .httpBasic(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
