@@ -54,7 +54,7 @@ Registration (`POST /api/auth/register`) and login (`POST /api/auth/login`) veri
 | Entity | Main fields | Relationships |
 | --- | --- | --- |
 | User | UserID, Name, Email (unique), PasswordHash, CreatedAt | Owns notes, reviewers, quizzes, attempts |
-| Note | id, ownerId, title, body, updatedAt | User → many notes |
+| Note | NoteID, UserID, Title, Content, SourceType, CreatedAt | User → many notes; Reviewer ↔ Note through ReviewerNote |
 | Reviewer | ReviewerID, UserID, Title, Style, Content, CreatedAt | User → many reviewers |
 | ReviewerNote | ReviewerID + NoteID (composite PK) | Reviewer ↔ Note, many-to-many |
 | Quiz | id, ownerId, reviewerId, title | Reviewer → many quizzes |
@@ -95,4 +95,4 @@ Check that parent objects belong to the same user. Save a quiz and its questions
 | GET /api/attempts/{id} | Saved result summary |
 | DELETE /api/attempts/{id} | Delete owned attempt |
 
-Authentication, user CRUD, reviewer (`/api/reviewers`) and attempt history (`/api/attempts`) routes above are implemented. Reviewer create and update take `{ title, style, content, noteIds: [...] }`; on update, `noteIds` is the full list, so notes left out are unlinked. Another user's reviewer or attempt returns 404. The remaining routes are implementation contracts, not existing endpoints. No external AI API, cloud service, or messaging system is needed.
+Authentication, user CRUD, notes (`/api/notes`), reviewer (`/api/reviewers`) and attempt history (`/api/attempts`) routes above are implemented. Note create and update take `{ title, content }`; the owner comes from the authenticated session and `SourceType` is `MANUAL`. Reviewer create and update take `{ title, style, content, noteIds: [...] }`; on update, `noteIds` is the full list, so notes left out are unlinked. Another user's note, reviewer, or attempt returns 404. The remaining routes are implementation contracts, not existing endpoints. No external AI API, cloud service, or messaging system is needed.
