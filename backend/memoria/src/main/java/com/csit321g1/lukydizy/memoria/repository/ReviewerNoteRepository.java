@@ -18,4 +18,7 @@ public interface ReviewerNoteRepository extends JpaRepository<ReviewerNoteEntity
 
     /** Lists the links of one note whose reviewer belongs to the given user. */
     List<ReviewerNoteEntity> findByNote_IdAndReviewer_User_Id(String noteId, String userId);
+
+    /** Counts reviewer links so a linked note can be protected from deletion. */
+    long countByNote_Id(String noteId);
 }
