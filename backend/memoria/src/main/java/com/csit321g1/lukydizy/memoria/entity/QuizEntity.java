@@ -35,7 +35,7 @@ public class QuizEntity {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private UserEntity user;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false, length = 150)
     private String title;
 
     @Column(nullable = false, length = 50)
@@ -84,4 +84,15 @@ public class QuizEntity {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+
+    /** Changes the title. Allowed even after the quiz has attempts. */
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    /** Replaces the questions JSON. QuizService blocks this once the quiz has attempts. */
+    public void setQuestions(String questions) {
+        this.questions = questions;
+    }
+
 }
