@@ -1,5 +1,8 @@
 package com.csit321g1.lukydizy.memoria;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -33,13 +36,15 @@ class AuthControllerTests {
     @Autowired
     private JdbcTemplate jdbc;
 
+    /** Clears users before each authentication test. */
     @BeforeEach
     void clearUsers() {
         jdbc.update("DELETE FROM users");
     }
 
+    /** Verifies registration validation, email normalization, and password hashing. */
     @Test
-    void registrationValidatesInputNormalizesEmailAndNeverReturnsPasswordHash() throws Exception {
+    void registrationValidatesInputAndStoresOnlyAHash() throws Exception {
         CsrfState csrf = getCsrf(null);
         mockMvc.perform(post("/api/auth/register")
                 .session(csrf.session())
@@ -68,8 +73,8 @@ class AuthControllerTests {
             String.class,
             "mina@example.com"
         );
-        org.junit.jupiter.api.Assertions.assertNotEquals("a-safe-password", storedHash);
-        org.junit.jupiter.api.Assertions.assertTrue(storedHash.startsWith("$2"));
+        assertNotEquals("a-safe-password", storedHash);
+        assertTrue(storedHash.startsWith("$2"));
 
         CsrfState refreshedCsrf = getCsrf(csrf.session());
         mockMvc.perform(post("/api/auth/register")
@@ -82,11 +87,12 @@ class AuthControllerTests {
             .andExpect(status().isConflict())
             .andExpect(jsonPath("$.error").value("An account with this email already exists."));
 
-        org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM users", Integer.class));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM users", Integer.class));
     }
 
+    /** Verifies that sessions authenticate protected routes and logout clears them. */
     @Test
-    void sessionsProtectMeAndLogoutInvalidatesTheSession() throws Exception {
+    void sessionProtectsApiAndLogoutInvalidatesIt() throws Exception {
         mockMvc.perform(get("/api/auth/me"))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.error").value("Unauthorized"));
@@ -119,8 +125,9 @@ class AuthControllerTests {
             .andExpect(status().isUnauthorized());
     }
 
+    /** Verifies case-insensitive login and generic invalid-credential errors. */
     @Test
-    void loginUsesCaseInsensitiveEmailAndKeepsBadCredentialsGeneric() throws Exception {
+    void loginNormalizesEmailAndRejectsIncorrectPasswords() throws Exception {
         CsrfState registrationCsrf = getCsrf(null);
         mockMvc.perform(post("/api/auth/register")
                 .session(registrationCsrf.session())
@@ -162,6 +169,7 @@ class AuthControllerTests {
             .andExpect(jsonPath("$.error").value("Forbidden"));
     }
 
+    /** Fetches a CSRF token for a new or existing test session. */
     private CsrfState getCsrf(MockHttpSession session) throws Exception {
         MvcResult result = mockMvc.perform(session == null
                 ? get("/api/auth/csrf")
