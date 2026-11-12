@@ -17,7 +17,7 @@ import jakarta.persistence.Table;
 
 /**
  * Note table from the ERD (NoteID, UserID, Title, Content, SourceType, CreatedAt).
- * Minimal version so BE-03 compiles; BE-02 extends this class instead of creating a second one.
+ * A student's note with the ERD fields and a link to its owning user.
  */
 @Entity
 @Table(name = "notes")
@@ -35,14 +35,14 @@ public class NoteEntity {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private UserEntity user;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false, length = 150)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    // Where the note came from, e.g. MANUAL.
-    @Column(name = "source_type", length = 30)
+    // Notes entered in the app use MANUAL as their source type.
+    @Column(name = "source_type", nullable = false, length = 30)
     private String sourceType;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -73,8 +73,18 @@ public class NoteEntity {
         return title;
     }
 
+    /** Replaces the note title. */
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public String getContent() {
         return content;
+    }
+
+    /** Replaces the note content. */
+    public void setContent(String content) {
+        this.content = content;
     }
 
     public String getSourceType() {
