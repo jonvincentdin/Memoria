@@ -136,6 +136,12 @@ class QuizTests {
         String id = create(body("Mine", 1, 4, 0, reviewerA));
         mockMvc.perform(get("/api/quizzes/{id}", id).with(user(otherId)))
             .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/quizzes/{id}/take", id).with(user(otherId)))
+            .andExpect(status().isNotFound());
+        mockMvc.perform(post("/api/quizzes/{id}/attempts", id).with(user(otherId)).with(csrf())
+                .contentType("application/json").content(submissionBody(List.of(Map.of(
+                    "questionIndex", 0, "choiceIndex", 0)))))
+            .andExpect(status().isNotFound());
         mockMvc.perform(put("/api/quizzes/{id}", id).with(user(otherId)).with(csrf())
                 .contentType("application/json").content(body("Hijack", 1, 4, 0, otherReviewer)))
             .andExpect(status().isNotFound());
@@ -165,6 +171,72 @@ class QuizTests {
             .andExpect(status().isConflict());
     }
 
+    @Test
+    void takeHidesAnswerKeysAndSubmissionGradesAndSavesSevenOfTen() throws Exception {
+        String id = create(body("Biology Quiz", 10, 4, 0, reviewerA));
+
+        mockMvc.perform(get("/api/quizzes/{id}/take", id).with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.title").value("Biology Quiz"))
+            .andExpect(jsonPath("$.questions.length()").value(10))
+            .andExpect(jsonPath("$.questions[0].choices.length()").value(4))
+            .andExpect(jsonPath("$.questions[0].correctIndex").doesNotExist());
+
+        List<Map<String, Integer>> selections = IntStream.range(0, 8)
+            .mapToObj(index -> Map.of("questionIndex", index, "choiceIndex", index < 7 ? 0 : 1))
+            .toList();
+        String response = mockMvc.perform(post("/api/quizzes/{id}/attempts", id)
+                .with(user(ownerId)).with(csrf())
+                .contentType("application/json").content(submissionBody(selections)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.score").value(7))
+            .andExpect(jsonPath("$.totalQuestions").value(10))
+            .andExpect(jsonPath("$.percentage").value(70.0))
+            .andExpect(jsonPath("$.status").value("COMPLETED"))
+            .andExpect(jsonPath("$.completedAt").exists())
+            .andReturn().getResponse().getContentAsString();
+        String attemptId = objectMapper.readTree(response).get("id").asText();
+
+        mockMvc.perform(get("/api/attempts/{id}", attemptId).with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.quizTitle").value("Biology Quiz"))
+            .andExpect(jsonPath("$.percentage").value(70.0));
+        mockMvc.perform(get("/api/attempts").with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(attemptId));
+        assertEquals(1, attempts.count());
+    }
+
+    @Test
+    void submissionRejectsUnknownChoicesAndDuplicateQuestionsWithoutSaving() throws Exception {
+        String id = create(body("Quiz", 1, 4, 0, reviewerA));
+        for (String invalid : List.of(
+            submissionBody(List.of(Map.of("questionIndex", 1, "choiceIndex", 0))),
+            submissionBody(List.of(Map.of("questionIndex", 0, "choiceIndex", 4))),
+            submissionBody(List.of(
+                Map.of("questionIndex", 0, "choiceIndex", 0),
+                Map.of("questionIndex", 0, "choiceIndex", 1)))
+        )) {
+            mockMvc.perform(post("/api/quizzes/{id}/attempts", id).with(user(ownerId)).with(csrf())
+                    .contentType("application/json").content(invalid))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
+        }
+        assertEquals(0, attempts.count());
+    }
+
+    @Test
+    void quizTakingAndSubmissionRequireLogin() throws Exception {
+        String id = create(body("Quiz", 1, 4, 0, reviewerA));
+        mockMvc.perform(get("/api/quizzes/{id}/take", id))
+            .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/quizzes/{id}/attempts", id).with(csrf())
+                .contentType("application/json").content(submissionBody(List.of())))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.error").value("Unauthorized"));
+    }
+
     /** Creates a quiz as the owner and returns its id. */
     private String create(String json) throws Exception {
         String response = mockMvc.perform(post("/api/quizzes").with(user(ownerId)).with(csrf())
@@ -184,5 +256,9 @@ class QuizTests {
             .toList();
         return objectMapper.writeValueAsString(Map.of(
             "title", title, "mode", "PRACTICE", "questions", questions, "reviewerIds", List.of(reviewerIds)));
+    }
+
+    private String submissionBody(List<Map<String, Integer>> answers) {
+        return objectMapper.writeValueAsString(Map.of("answers", answers));
     }
 }
