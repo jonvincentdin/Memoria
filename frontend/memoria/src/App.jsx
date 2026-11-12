@@ -5,6 +5,7 @@ import AppShell from './components/AppShell'
 import AuthPage from './pages/AuthPage'
 import ComingSoon from './pages/ComingSoon'
 import Dashboard from './pages/Dashboard'
+import Notes from './pages/notes/Notes'
 import Reviewers from './pages/reviewers/Reviewers'
 import { SECTIONS } from './sections'
 
@@ -67,8 +68,9 @@ function App() {
     const profile = { ...user, name: user.name || user.email.split('@')[0] }
     const section = SECTIONS.find(({ route }) => route === mode)
     return <AppShell user={profile} current={mode} onLogout={logout}>
-      {mode === 'reviewers'
-        ? <Reviewers path={path.slice(1)} />
+      {mode === 'notes'
+        ? <Notes path={path.slice(1)} />
+        : mode === 'reviewers' ? <Reviewers path={path.slice(1)} />
         : section ? <ComingSoon key={mode} section={section} /> : <Dashboard user={profile} />}
     </AppShell>
   }
