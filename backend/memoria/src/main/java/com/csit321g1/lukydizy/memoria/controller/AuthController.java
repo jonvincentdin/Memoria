@@ -63,8 +63,11 @@ public class AuthController {
         HttpServletRequest request,
         HttpServletResponse response
     ) {
+        // Validates, hashes the password and saves the new user.
         UserProfile profile = userService.register(requestBody);
+        // Log the new user in right away by creating a session.
         establishSession(profile.userId(), request, response);
+        // 201 Created.
         response.setStatus(HttpStatus.CREATED.value());
         return profile;
     }
@@ -76,7 +79,9 @@ public class AuthController {
         HttpServletRequest request,
         HttpServletResponse response
     ) {
+        // Throws 401 if the email or password is wrong.
         UserEntity user = userService.authenticate(requestBody);
+        // Create the session; the browser receives a JSESSIONID cookie.
         establishSession(user.getId(), request, response);
         return new UserProfile(user.getId(), user.getName(), user.getEmail(), user.getCreatedAt());
     }
@@ -84,6 +89,7 @@ public class AuthController {
     /** Returns the profile belonging to the current authenticated session. */
     @GetMapping("/me")
     public UserProfile currentUser(Authentication authentication) {
+        // The session stores the user ID as the authentication name.
         return userService.getProfile(authentication.getName());
     }
 
@@ -93,15 +99,18 @@ public class AuthController {
         HttpServletRequest request,
         HttpServletResponse response
     ) {
+        // Build a logged-in identity: the user ID with the ROLE_USER role.
         Authentication authentication = UsernamePasswordAuthenticationToken.authenticated(
             userId,
             null,
             java.util.List.of(new SimpleGrantedAuthority("ROLE_USER"))
         );
+        // Rotate the session ID and CSRF token (prevents session fixation).
         sessionAuthenticationStrategy.onAuthentication(authentication, request, response);
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
+        // Save the login into the HTTP session so later requests stay authenticated.
         securityContextRepository.saveContext(context, request, response);
     }
 }

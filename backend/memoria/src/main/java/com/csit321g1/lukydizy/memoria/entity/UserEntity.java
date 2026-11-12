@@ -18,20 +18,24 @@ import jakarta.persistence.UniqueConstraint;
 })
 public class UserEntity {
 
+    // Primary key (UserID), generated as a UUID.
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "user_id", nullable = false, updatable = false)
     private String id;
 
+    // Set once when the account is created; never updated.
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = false, length = 120)
     private String name;
 
+    // Email must be unique (see uk_users_email on the table).
     @Column(nullable = false, length = 254)
     private String email;
 
+    // BCrypt hash only; the plain password is never stored.
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
@@ -93,6 +97,7 @@ public class UserEntity {
     }
 
     /** Defines the write-only password hash property. */
+    // Accepted in requests but never sent back in JSON responses.
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public String getPasswordHash() {
         return passwordHash;
