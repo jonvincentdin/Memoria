@@ -12,6 +12,7 @@ public record AttemptResponse(
     String quizTitle,
     int score,
     int totalQuestions,
+    double percentage,
     AttemptStatus status,
     LocalDateTime completedAt
 ) {
@@ -25,6 +26,7 @@ public record AttemptResponse(
             attempt.getQuiz().getTitle(),
             attempt.getScore(),
             attempt.getTotalQuestions(),
+            100.0 * attempt.getScore() / attempt.getTotalQuestions(),
             attempt.getStatus(),
             attempt.getCompletedAt()
         );
