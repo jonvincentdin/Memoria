@@ -55,11 +55,17 @@ Registration (`POST /api/auth/register`) and login (`POST /api/auth/login`) veri
 | --- | --- | --- |
 | User | UserID, Name, Email (unique), PasswordHash, CreatedAt | Owns notes, reviewers, quizzes, attempts |
 | Note | id, ownerId, title, body, updatedAt | User → many notes |
-| Reviewer | id, ownerId, noteId, title, body | Note → many reviewers |
+| Reviewer | ReviewerID, UserID, Title, Style, Content, CreatedAt | User → many reviewers |
+| ReviewerNote | ReviewerID + NoteID (composite PK) | Reviewer ↔ Note, many-to-many |
 | Quiz | id, ownerId, reviewerId, title | Reviewer → many quizzes |
 | Question | id, quizId, text, choiceA–D, correctChoice | Quiz → many questions |
-| Attempt | id, ownerId, quizId, submittedAt, correctCount, totalCount, submissionToken (unique) | Quiz → many attempts |
-| AttemptAnswer | id, attemptId, questionId, selectedChoice (nullable) | Attempt → many answers |
+| QuizAttempt | AttemptID, UserID, QuizID, Score, TotalQuestions, Status, CompletedAt | Quiz → many attempts |
+
+**ERD decisions (Increment 1):**
+
+- **Reviewer ↔ Note** is many-to-many through the `ReviewerNote` join table (`reviewer_notes`). A reviewer needs at least one note, and every linked note must belong to the reviewer's owner. This replaces the older one-note-per-reviewer design.
+- **Quiz attempts** store only the result summary in `QuizAttempt` (`quiz_attempts`). Status is `COMPLETED` for a graded attempt. The ERD has no `AttemptAnswer` table, so per-question answer review is deferred as stretch work. Do not add that table without a formal ERD update.
+- A reviewer used by a quiz (`QuizReviewer`) cannot be deleted. The API returns 409 with a clear message.
 
 Check that parent objects belong to the same user. Save a quiz and its questions transactionally. Use a transaction for grading and saving an attempt. Enforce the edit/delete restrictions in requirements to retain history without snapshots or complex versioning.
 
@@ -85,7 +91,8 @@ Check that parent objects belong to the same user. Save a quiz and its questions
 | GET/PUT/DELETE /api/quizzes/{id} | Authoring operations; owned content only |
 | GET /api/quizzes/{id}/take | Questions without answer keys; issue submission token |
 | POST /api/quizzes/{id}/attempts | Validate token, grade on server, save result |
-| GET /api/attempts | Personal history |
-| GET /api/attempts/{id} | Saved result and answer review |
+| GET /api/attempts | Personal history, newest first (optional `?quizId=`) |
+| GET /api/attempts/{id} | Saved result summary |
+| DELETE /api/attempts/{id} | Delete owned attempt |
 
-Authentication and user CRUD routes above are implemented. The remaining routes are implementation contracts, not existing endpoints. No external AI API, cloud service, or messaging system is needed.
+Authentication, user CRUD, reviewer (`/api/reviewers`) and attempt history (`/api/attempts`) routes above are implemented. Reviewer create and update take `{ title, style, content, noteIds: [...] }`; on update, `noteIds` is the full list, so notes left out are unlinked. Another user's reviewer or attempt returns 404. The remaining routes are implementation contracts, not existing endpoints. No external AI API, cloud service, or messaging system is needed.
