@@ -10,13 +10,14 @@ Students often store notes in separate files and applications, manually prepare 
 
 ## Project status
 
-Accounts are implemented: students can register, log in, log out, and view their profile through a session-backed API. Notes, reviewers, quizzes, and results remain planned. This is a simplified subject-project adaptation inspired by [DandD-Official/Memoria](https://github.com/DandD-Official/Memoria), not a copy of its existing application. Do not overlay these files on that repository without reviewing the differences.
+User registration, login, logout, and basic user CRUD are implemented through the backend API. Notes, reviewers, quizzes, and results remain planned. This is a simplified subject-project adaptation inspired by [DandD-Official/Memoria](https://github.com/DandD-Official/Memoria), not a copy of its existing application. Do not overlay these files on that repository without reviewing the differences.
 
 ## Planned features
 
 | Module | Features |
 | --- | --- |
 | Accounts | Register, log in, log out (implemented) |
+| Users | Create, list, read, update, and delete (implemented) |
 | Notes | Create, list/read, edit/delete personal notes |
 | Reviewers | Create/edit/delete a reviewer linked to a note; browse/read reviewers |
 | Quizzes | Create/edit/delete multiple-choice quizzes; take a quiz |
@@ -49,7 +50,7 @@ Everyone is a Software Developer. Feature ownership and peer review assignments 
 
 ## Local setup
 
-The React/Vite app is in `frontend/memoria`; the Spring Boot API is in `backend/memoria`. Account authentication is available; the other study features remain planned.
+The React/Vite app is in `frontend/memoria`; the Spring Boot API is in `backend/memoria`. Basic user CRUD is available; the other study features remain planned.
 
 1. Install Node.js LTS and a JDK 17 or newer. Install PostgreSQL locally or obtain Supabase credentials from a teammate.
 2. Follow [SETUP.md](SETUP.md) to configure your database (local PostgreSQL or Supabase) and set environment variables.

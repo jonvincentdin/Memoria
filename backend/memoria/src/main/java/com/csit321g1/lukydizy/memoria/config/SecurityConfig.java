@@ -29,30 +29,36 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    /** BCrypt encoder bean — inject wherever passwords are hashed or verified. */
+    /** Creates the encoder used to hash and verify passwords. */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /** Creates a CSRF token repository backed by the HTTP session. */
     @Bean
     public CsrfTokenRepository csrfTokenRepository() {
         return new HttpSessionCsrfTokenRepository();
     }
 
+    /** Creates a security context repository backed by the HTTP session. */
     @Bean
     public SecurityContextRepository securityContextRepository() {
         return new HttpSessionSecurityContextRepository();
     }
 
+    /** Rotates the session ID and CSRF token after authentication. */
     @Bean
-    public SessionAuthenticationStrategy sessionAuthenticationStrategy(CsrfTokenRepository csrfTokenRepository) {
+    public SessionAuthenticationStrategy sessionAuthenticationStrategy(
+        CsrfTokenRepository csrfTokenRepository
+    ) {
         return new CompositeSessionAuthenticationStrategy(List.of(
             new ChangeSessionIdAuthenticationStrategy(),
             new CsrfAuthenticationStrategy(csrfTokenRepository)
         ));
     }
 
+    /** Configures session authentication and access rules for the API. */
     @Bean
     public SecurityFilterChain filterChain(
         HttpSecurity http,
@@ -60,56 +66,43 @@ public class SecurityConfig {
         SecurityContextRepository securityContextRepository
     ) throws Exception {
         http
-            .cors(cors -> {
-                cors.configurationSource(corsConfigurationSource());
-            })
-            .csrf(csrf -> {
-                csrf.csrfTokenRepository(csrfTokenRepository);
-            })
-            .securityContext(context -> {
-                context
-                    .securityContextRepository(securityContextRepository)
-                    .requireExplicitSave(true);
-            })
-            .authorizeHttpRequests(auth -> {
-                auth
-                    .requestMatchers(
-                        "/actuator/health",
-                        "/api/auth/csrf",
-                        "/api/auth/register",
-                        "/api/auth/login"
-                    ).permitAll()
-                    .requestMatchers("/api/**").authenticated()
-                    .anyRequest().permitAll();
-            })
-            .logout(logout -> {
-                logout
-                    .logoutUrl("/api/auth/logout")
-                    .invalidateHttpSession(true)
-                    .deleteCookies("JSESSIONID")
-                    .logoutSuccessHandler(jsonLogoutSuccessHandler());
-            })
-            // Return JSON 401 instead of a redirect to a login page
-            .exceptionHandling(ex -> {
-                ex
-                    .authenticationEntryPoint((req, res, e) -> {
-                        res.setStatus(HttpStatus.UNAUTHORIZED.value());
-                        res.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                        res.getWriter().write("{\"error\":\"Unauthorized\"}");
-                    })
-                    .accessDeniedHandler((req, res, e) -> {
-                        res.setStatus(HttpStatus.FORBIDDEN.value());
-                        res.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                        res.getWriter().write("{\"error\":\"Forbidden\"}");
-                    });
-            })
-            // No form login or HTTP Basic — session-based, controlled by /api/auth
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository))
+            .securityContext(context -> context
+                .securityContextRepository(securityContextRepository)
+                .requireExplicitSave(true))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    "/actuator/health",
+                    "/api/auth/csrf",
+                    "/api/auth/register",
+                    "/api/auth/login"
+                ).permitAll()
+                .requestMatchers("/api/**").authenticated()
+                .anyRequest().permitAll())
+            .logout(logout -> logout
+                .logoutUrl("/api/auth/logout")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+                .logoutSuccessHandler(jsonLogoutSuccessHandler()))
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, exception) -> {
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    response.getWriter().write("{\"error\":\"Unauthorized\"}");
+                })
+                .accessDeniedHandler((request, response, exception) -> {
+                    response.setStatus(HttpStatus.FORBIDDEN.value());
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    response.getWriter().write("{\"error\":\"Forbidden\"}");
+                }))
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
 
+    /** Returns a JSON response after a successful logout. */
     private LogoutSuccessHandler jsonLogoutSuccessHandler() {
         return (request, response, authentication) -> {
             response.setStatus(HttpStatus.OK.value());
@@ -118,10 +111,10 @@ public class SecurityConfig {
         };
     }
 
+    /** Configures credentialed API requests from the local Vite server. */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Allow the Vite dev server to send cookies
         config.setAllowedOrigins(List.of("http://localhost:5173"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));

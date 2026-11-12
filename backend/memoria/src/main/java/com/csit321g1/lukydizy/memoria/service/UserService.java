@@ -17,6 +17,7 @@ import com.csit321g1.lukydizy.memoria.entity.UserEntity;
 import com.csit321g1.lukydizy.memoria.exception.EmailAlreadyUsedException;
 import com.csit321g1.lukydizy.memoria.exception.InvalidCredentialsException;
 import com.csit321g1.lukydizy.memoria.exception.InvalidRegistrationException;
+import com.csit321g1.lukydizy.memoria.exception.UserNotFoundException;
 import com.csit321g1.lukydizy.memoria.repository.UserRepository;
 
 @Service
@@ -27,11 +28,19 @@ public class UserService {
     private final UserRepository repo;
     private final PasswordEncoder passwordEncoder;
 
+    /** Creates the service with its user repository and password encoder. */
     public UserService(UserRepository repo, PasswordEncoder passwordEncoder) {
         this.repo = repo;
         this.passwordEncoder = passwordEncoder;
     }
 
+    /** Sets the creation time and saves a new user. */
+    public UserEntity create(UserEntity user) {
+        user.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        return repo.save(user);
+    }
+
+    /** Registers a user with a normalized email and a hashed password. */
     public UserProfile register(RegisterRequest request) {
         String normalizedEmail = normalizeEmail(request.email());
         if (repo.existsByEmail(normalizedEmail)) {
@@ -57,6 +66,7 @@ public class UserService {
         }
     }
 
+    /** Finds a user by email and verifies the supplied password. */
     public UserEntity authenticate(LoginRequest request) {
         String normalizedEmail = normalizeEmail(request.email());
         String password = request.password();
@@ -64,44 +74,49 @@ public class UserService {
             throw new InvalidCredentialsException();
         }
 
-        UserEntity user = repo.findByEmail(normalizedEmail)
+        return repo.findByEmail(normalizedEmail)
             .filter(candidate -> passwordEncoder.matches(password, candidate.getPasswordHash()))
             .orElseThrow(InvalidCredentialsException::new);
-        return user;
     }
 
+    /** Returns the public profile for a user ID. */
     public UserProfile getProfile(String id) {
         return toProfile(readById(id));
     }
 
+    /** Normalizes an email address for consistent lookup and storage. */
     private String normalizeEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
     }
 
+    /** Converts a user entity to a response that excludes the password hash. */
     private UserProfile toProfile(UserEntity user) {
         return new UserProfile(user.getId(), user.getName(), user.getEmail(), user.getCreatedAt());
     }
 
+    /** Returns all users. */
     public List<UserEntity> readAll() {
         return repo.findAll();
     }
 
+    /** Finds a user by ID or throws when it does not exist. */
     public UserEntity readById(String id) {
-        return repo.findById(id).orElseThrow(() ->
-            new RuntimeException("User not found with id:")
-        );
+        return repo.findById(id).orElseThrow(() -> new UserNotFoundException(id));
     }
 
+    /** Replaces the editable fields of an existing user. */
     public UserEntity update(String id, UserEntity newDetails) {
         UserEntity userEntity = readById(id);
         userEntity.setName(newDetails.getName());
         userEntity.setEmail(newDetails.getEmail());
+        userEntity.setPasswordHash(newDetails.getPasswordHash());
         return repo.save(userEntity);
     }
 
+    /** Deletes a user by ID. */
     public String delete(String id) {
         UserEntity userEntity = readById(id);
         repo.delete(userEntity);
-        return "Succesfully deleted user: " + id;
+        return "Successfully deleted user: " + id;
     }
 }

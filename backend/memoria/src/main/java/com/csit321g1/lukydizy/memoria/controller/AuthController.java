@@ -15,9 +15,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,6 +35,7 @@ public class AuthController {
     private final SessionAuthenticationStrategy sessionAuthenticationStrategy;
     private final SecurityContextRepository securityContextRepository;
 
+    /** Creates the controller with its authentication dependencies. */
     public AuthController(
         UserService userService,
         SessionAuthenticationStrategy sessionAuthenticationStrategy,
@@ -45,6 +46,7 @@ public class AuthController {
         this.securityContextRepository = securityContextRepository;
     }
 
+    /** Returns the CSRF token required for state-changing requests. */
     @GetMapping("/csrf")
     public Map<String, String> getCsrfToken(CsrfToken token) {
         return Map.of(
@@ -54,6 +56,7 @@ public class AuthController {
         );
     }
 
+    /** Registers a user and starts an authenticated session. */
     @PostMapping("/register")
     public UserProfile register(
         @Valid @RequestBody RegisterRequest requestBody,
@@ -66,6 +69,7 @@ public class AuthController {
         return profile;
     }
 
+    /** Verifies credentials and starts an authenticated session. */
     @PostMapping("/login")
     public UserProfile login(
         @Valid @RequestBody LoginRequest requestBody,
@@ -77,12 +81,18 @@ public class AuthController {
         return new UserProfile(user.getId(), user.getName(), user.getEmail(), user.getCreatedAt());
     }
 
+    /** Returns the profile belonging to the current authenticated session. */
     @GetMapping("/me")
     public UserProfile currentUser(Authentication authentication) {
         return userService.getProfile(authentication.getName());
     }
 
-    private void establishSession(String userId, HttpServletRequest request, HttpServletResponse response) {
+    /** Stores the authenticated user in the HTTP session. */
+    private void establishSession(
+        String userId,
+        HttpServletRequest request,
+        HttpServletResponse response
+    ) {
         Authentication authentication = UsernamePasswordAuthenticationToken.authenticated(
             userId,
             null,
