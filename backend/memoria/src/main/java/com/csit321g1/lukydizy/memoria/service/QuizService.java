@@ -10,9 +10,12 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.csit321g1.lukydizy.memoria.dto.AttemptResponse;
+import com.csit321g1.lukydizy.memoria.dto.AttemptSubmissionRequest;
 import com.csit321g1.lukydizy.memoria.dto.QuizQuestion;
 import com.csit321g1.lukydizy.memoria.dto.QuizRequest;
 import com.csit321g1.lukydizy.memoria.dto.QuizResponse;
+import com.csit321g1.lukydizy.memoria.dto.QuizTakeResponse;
 import com.csit321g1.lukydizy.memoria.entity.QuizEntity;
 import com.csit321g1.lukydizy.memoria.entity.QuizReviewerEntity;
 import com.csit321g1.lukydizy.memoria.entity.ReviewerEntity;
@@ -38,6 +41,7 @@ public class QuizService {
     private final QuizReviewerRepository quizReviewers;
     private final ReviewerRepository reviewers;
     private final QuizAttemptRepository attempts;
+    private final QuizAttemptService attemptService;
     private final UserRepository users;
     // Spring Boot's JSON mapper (Jackson 3), used to store questions as text.
     private final ObjectMapper mapper;
@@ -47,6 +51,7 @@ public class QuizService {
         QuizReviewerRepository quizReviewers,
         ReviewerRepository reviewers,
         QuizAttemptRepository attempts,
+        QuizAttemptService attemptService,
         UserRepository users,
         ObjectMapper mapper
     ) {
@@ -54,6 +59,7 @@ public class QuizService {
         this.quizReviewers = quizReviewers;
         this.reviewers = reviewers;
         this.attempts = attempts;
+        this.attemptService = attemptService;
         this.users = users;
         this.mapper = mapper;
     }
@@ -86,6 +92,52 @@ public class QuizService {
     @Transactional(readOnly = true)
     public QuizResponse get(String id) {
         return toResponse(findOwned(id, CurrentUser.id()));
+    }
+
+    /** Returns the owner's student-facing quiz view without answer keys. */
+    @Transactional(readOnly = true)
+    public QuizTakeResponse take(String id) {
+        QuizEntity quiz = findOwned(id, CurrentUser.id());
+        List<QuizTakeResponse.Question> questions = fromJson(quiz.getQuestions()).stream()
+            .map(question -> new QuizTakeResponse.Question(question.text(), question.choices()))
+            .toList();
+        return new QuizTakeResponse(quiz.getTitle(), questions);
+    }
+
+    /** Grades and saves an attempt atomically; omitted questions count as incorrect. */
+    @Transactional
+    public AttemptResponse submit(String id, AttemptSubmissionRequest request) {
+        QuizEntity quiz = findOwned(id, CurrentUser.id());
+        List<QuizQuestion> questions = fromJson(quiz.getQuestions());
+        if (questions.isEmpty()) {
+            throw new InvalidRequestException("This quiz has no questions to grade.");
+        }
+        if (request == null || request.answers() == null) {
+            throw new InvalidRequestException("Answers are required. Use an empty list for an unanswered quiz.");
+        }
+
+        Set<Integer> answeredQuestions = new LinkedHashSet<>();
+        int score = 0;
+        for (AttemptSubmissionRequest.AnswerSelection answer : request.answers()) {
+            int questionIndex = answer.questionIndex();
+            int choiceIndex = answer.choiceIndex();
+            if (questionIndex >= questions.size()) {
+                throw new InvalidRequestException("Question index " + questionIndex + " does not exist.");
+            }
+            if (choiceIndex >= questions.get(questionIndex).choices().size()) {
+                throw new InvalidRequestException(
+                    "Choice index " + choiceIndex + " does not exist for question " + questionIndex + "."
+                );
+            }
+            if (!answeredQuestions.add(questionIndex)) {
+                throw new InvalidRequestException("Question " + questionIndex + " has more than one answer.");
+            }
+            if (questions.get(questionIndex).correctIndex() == choiceIndex) {
+                score++;
+            }
+        }
+
+        return attemptService.create(id, score, questions.size());
     }
 
     /**

@@ -69,7 +69,7 @@ Registration (`POST /api/auth/register`) and login (`POST /api/auth/login`) veri
 
 Check that parent objects belong to the same user. Save a quiz and its questions transactionally. Use a transaction for grading and saving an attempt. Enforce the edit/delete restrictions in requirements to retain history without snapshots or complex versioning.
 
-## Planned API surface
+## API surface
 
 | Route | Purpose |
 | --- | --- |
@@ -89,10 +89,12 @@ Check that parent objects belong to the same user. Save a quiz and its questions
 | GET/PUT/DELETE /api/reviewers/{id} | Read/update/delete owned reviewer |
 | GET/POST /api/quizzes | List/create quizzes |
 | GET/PUT/DELETE /api/quizzes/{id} | Authoring operations; owned content only |
-| GET /api/quizzes/{id}/take | Questions without answer keys; issue submission token |
-| POST /api/quizzes/{id}/attempts | Validate token, grade on server, save result |
+| GET /api/quizzes/{id}/take | Owner's questions and choices without answer keys |
+| POST /api/quizzes/{id}/attempts | Grade submitted choices on the server and save the result |
 | GET /api/attempts | Personal history, newest first (optional `?quizId=`) |
 | GET /api/attempts/{id} | Saved result summary |
 | DELETE /api/attempts/{id} | Delete owned attempt |
 
-Authentication, user CRUD, notes (`/api/notes`), reviewer (`/api/reviewers`) and attempt history (`/api/attempts`) routes above are implemented. Note create and update take `{ title, content }`; the owner comes from the authenticated session and `SourceType` is `MANUAL`. Reviewer create and update take `{ title, style, content, noteIds: [...] }`; on update, `noteIds` is the full list, so notes left out are unlinked. Another user's note, reviewer, or attempt returns 404. The remaining routes are implementation contracts, not existing endpoints. No external AI API, cloud service, or messaging system is needed.
+Quiz submission accepts `{"answers":[{"questionIndex":0,"choiceIndex":2}]}` with zero-based indexes. Leave unanswered questions out of the list; they count as incorrect. The server rejects unknown or duplicate selections, grades the quiz, and saves the attempt in one transaction. Result summaries include quiz title, score, total questions, percentage, status, and completion time. Quiz and attempt reads are restricted to the current owner; another user's resource returns 404. Results intentionally do not include per-question answer review because the ERD has no `AttemptAnswer` table.
+
+Authentication, user CRUD, notes (`/api/notes`), reviewer (`/api/reviewers`), quiz (`/api/quizzes`), and attempt (`/api/attempts`) routes above are implemented. Note create and update take `{ title, content }`; the owner comes from the authenticated session and `SourceType` is `MANUAL`. Reviewer create and update take `{ title, style, content, noteIds: [...] }`; on update, `noteIds` is the full list, so notes left out are unlinked. No external AI API, cloud service, or messaging system is needed.
