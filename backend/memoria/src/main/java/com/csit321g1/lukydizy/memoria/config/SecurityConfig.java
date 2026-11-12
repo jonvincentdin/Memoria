@@ -66,11 +66,15 @@ public class SecurityConfig {
         SecurityContextRepository securityContextRepository
     ) throws Exception {
         http
+            // Allow the React dev server to call the API with cookies.
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // POST/PUT/DELETE must send the CSRF token from GET /api/auth/csrf.
             .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository))
+            // Keep the logged-in user in the HTTP session.
             .securityContext(context -> context
                 .securityContextRepository(securityContextRepository)
                 .requireExplicitSave(true))
+            // Which URLs are public and which need a login.
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/actuator/health",
@@ -78,13 +82,16 @@ public class SecurityConfig {
                     "/api/auth/register",
                     "/api/auth/login"
                 ).permitAll()
+                // Every other /api route (users, reviewers, attempts, ...) needs a session.
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll())
+            // POST /api/auth/logout ends the session and deletes the cookie.
             .logout(logout -> logout
                 .logoutUrl("/api/auth/logout")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
                 .logoutSuccessHandler(jsonLogoutSuccessHandler()))
+            // Return JSON 401/403 instead of redirecting to a login page.
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, exception) -> {
                     response.setStatus(HttpStatus.UNAUTHORIZED.value());
@@ -96,6 +103,7 @@ public class SecurityConfig {
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                     response.getWriter().write("{\"error\":\"Forbidden\"}");
                 }))
+            // No built-in login page or HTTP Basic; login goes through AuthController.
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable);
 
@@ -115,9 +123,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+        // Only the Vite dev server may call the API from a browser.
         config.setAllowedOrigins(List.of("http://localhost:5173"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
+        // Lets the browser send the session cookie cross-origin.
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
