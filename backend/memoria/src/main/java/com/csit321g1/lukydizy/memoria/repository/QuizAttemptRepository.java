@@ -17,4 +17,8 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttemptEntity, 
 
     /** Lists a user's attempts for one quiz, newest first. */
     List<QuizAttemptEntity> findByUser_IdAndQuiz_IdOrderByCompletedAtDesc(String userId, String quizId);
+    
+    /** True once anyone has attempted the quiz; used to lock its questions and block deletion. */
+    boolean existsByQuiz_Id(String quizId);
+
 }
