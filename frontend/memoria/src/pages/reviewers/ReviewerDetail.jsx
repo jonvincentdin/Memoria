@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { errorMessage, useApiData } from '@/lib/useApiData'
+import FlashcardSection from './FlashcardSection'
 import { formatDate } from './format'
 
 // Reading view for one reviewer: content, linked notes, edit and delete.
@@ -103,5 +104,7 @@ export default function ReviewerDetail({ id }) {
         </ul>
       </CardContent>
     </Card>
+
+    <FlashcardSection reviewerId={id} />
   </article>
 }
