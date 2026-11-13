@@ -11,10 +11,11 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.csit321g1.lukydizy.memoria.dto.ReviewerRequest;
-import com.csit321g1.lukydizy.memoria.dto.ReviewerResponse;
 import com.csit321g1.lukydizy.memoria.entity.NoteEntity;
 import com.csit321g1.lukydizy.memoria.entity.ReviewerEntity;
+import com.csit321g1.lukydizy.memoria.dto.ReviewerDto.ReviewerRequest;
+import com.csit321g1.lukydizy.memoria.dto.ReviewerDto.ReviewerResponse;
+import com.csit321g1.lukydizy.memoria.dto.ReviewerNoteDto.LinkedNote;
 import com.csit321g1.lukydizy.memoria.entity.ReviewerNoteEntity;
 import com.csit321g1.lukydizy.memoria.exception.InvalidRequestException;
 import com.csit321g1.lukydizy.memoria.exception.ResourceInUseException;
@@ -182,9 +183,9 @@ public class ReviewerService {
     /** Converts a reviewer and its linked notes (owned by the same user) into a response. */
     private ReviewerResponse toResponse(ReviewerEntity reviewer, String userId) {
         // Load the linked notes through the ReviewerNote join table.
-        List<ReviewerResponse.LinkedNote> linkedNotes = reviewerNotes
+        List<LinkedNote> linkedNotes = reviewerNotes
             .findByReviewer_IdAndNote_User_Id(reviewer.getId(), userId).stream()
-            .map(link -> new ReviewerResponse.LinkedNote(link.getNote().getId(), link.getNote().getTitle()))
+            .map(link -> new LinkedNote(link.getNote().getId(), link.getNote().getTitle()))
             .toList();
         return new ReviewerResponse(
             reviewer.getId(),

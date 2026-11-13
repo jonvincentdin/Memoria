@@ -10,9 +10,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.csit321g1.lukydizy.memoria.dto.LoginRequest;
-import com.csit321g1.lukydizy.memoria.dto.RegisterRequest;
-import com.csit321g1.lukydizy.memoria.dto.UserProfile;
+import com.csit321g1.lukydizy.memoria.entity.UserEntity;
+import com.csit321g1.lukydizy.memoria.dto.UserDto.LoginRequest;
+import com.csit321g1.lukydizy.memoria.dto.UserDto.RegisterRequest;
+import com.csit321g1.lukydizy.memoria.dto.UserDto.UserProfile;
 import com.csit321g1.lukydizy.memoria.entity.UserEntity;
 import com.csit321g1.lukydizy.memoria.exception.EmailAlreadyUsedException;
 import com.csit321g1.lukydizy.memoria.exception.InvalidCredentialsException;

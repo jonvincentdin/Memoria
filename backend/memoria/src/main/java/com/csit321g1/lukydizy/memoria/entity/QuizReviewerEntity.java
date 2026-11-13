@@ -1,5 +1,8 @@
 package com.csit321g1.lukydizy.memoria.entity;
 
+import java.io.Serializable;
+import java.util.Objects;
+
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -17,8 +20,39 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "quiz_reviewers")
-@IdClass(QuizReviewerId.class)
+@IdClass(QuizReviewerEntity.CompositeId.class)
 public class QuizReviewerEntity {
+
+    /** Composite primary key for the quiz-reviewer link. */
+    public static class CompositeId implements Serializable {
+
+        private String quiz;
+        private String reviewer;
+
+        public CompositeId() {
+        }
+
+        public CompositeId(String quiz, String reviewer) {
+            this.quiz = quiz;
+            this.reviewer = reviewer;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) {
+                return true;
+            }
+            if (!(other instanceof CompositeId that)) {
+                return false;
+            }
+            return Objects.equals(quiz, that.quiz) && Objects.equals(reviewer, that.reviewer);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(quiz, reviewer);
+        }
+    }
 
     // Part 1 of the composite key: FK to quizzes (QuizID).
     @Id

@@ -7,8 +7,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.csit321g1.lukydizy.memoria.dto.NoteRequest;
-import com.csit321g1.lukydizy.memoria.dto.NoteResponse;
+import com.csit321g1.lukydizy.memoria.entity.NoteEntity;
+import com.csit321g1.lukydizy.memoria.dto.NoteDto.NoteRequest;
+import com.csit321g1.lukydizy.memoria.dto.NoteDto.NoteResponse;
 import com.csit321g1.lukydizy.memoria.entity.NoteEntity;
 import com.csit321g1.lukydizy.memoria.exception.ResourceInUseException;
 import com.csit321g1.lukydizy.memoria.exception.ResourceNotFoundException;

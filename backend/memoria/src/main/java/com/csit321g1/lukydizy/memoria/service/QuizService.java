@@ -10,12 +10,13 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.csit321g1.lukydizy.memoria.dto.AttemptResponse;
-import com.csit321g1.lukydizy.memoria.dto.AttemptSubmissionRequest;
-import com.csit321g1.lukydizy.memoria.dto.QuizQuestion;
-import com.csit321g1.lukydizy.memoria.dto.QuizRequest;
-import com.csit321g1.lukydizy.memoria.dto.QuizResponse;
-import com.csit321g1.lukydizy.memoria.dto.QuizTakeResponse;
+import com.csit321g1.lukydizy.memoria.dto.QuizAttemptDto.AttemptResponse;
+import com.csit321g1.lukydizy.memoria.dto.QuizAttemptDto.AttemptSubmissionRequest;
+import com.csit321g1.lukydizy.memoria.dto.QuizDto.QuizQuestion;
+import com.csit321g1.lukydizy.memoria.dto.QuizDto.QuizRequest;
+import com.csit321g1.lukydizy.memoria.dto.QuizDto.QuizResponse;
+import com.csit321g1.lukydizy.memoria.dto.QuizDto.QuizTakeResponse;
+import com.csit321g1.lukydizy.memoria.dto.QuizReviewerDto.LinkedReviewer;
 import com.csit321g1.lukydizy.memoria.entity.QuizEntity;
 import com.csit321g1.lukydizy.memoria.entity.QuizReviewerEntity;
 import com.csit321g1.lukydizy.memoria.entity.ReviewerEntity;
@@ -223,8 +224,8 @@ public class QuizService {
 
     /** Builds the API response, including linked reviewers and the read-only flag. */
     private QuizResponse toResponse(QuizEntity quiz) {
-        List<QuizResponse.LinkedReviewer> linked = quizReviewers.findByQuiz_Id(quiz.getId()).stream()
-            .map(link -> new QuizResponse.LinkedReviewer(link.getReviewer().getId(), link.getReviewer().getTitle()))
+        List<LinkedReviewer> linked = quizReviewers.findByQuiz_Id(quiz.getId()).stream()
+            .map(link -> new LinkedReviewer(link.getReviewer().getId(), link.getReviewer().getTitle()))
             .toList();
         return new QuizResponse(
             quiz.getId(),
