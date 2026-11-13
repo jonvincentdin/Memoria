@@ -12,3 +12,5 @@ data/
 
 # Supabase CLI temp files
 supabase/.temp/
+
+.postman
