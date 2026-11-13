@@ -25,7 +25,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.csit321g1.lukydizy.memoria.entity.AttemptStatus;
 import com.csit321g1.lukydizy.memoria.entity.QuizAttemptEntity;
 import com.csit321g1.lukydizy.memoria.entity.ReviewerEntity;
 import com.csit321g1.lukydizy.memoria.entity.UserEntity;
@@ -154,7 +153,7 @@ class QuizTests {
     void attemptsLockQuestionsAndBlockDelete() throws Exception {
         String id = create(body("Quiz", 1, 4, 0, reviewerA));
         attempts.save(new QuizAttemptEntity(owner, quizzes.findById(id).orElseThrow(), 1, 1,
-            AttemptStatus.COMPLETED, LocalDateTime.now(ZoneOffset.UTC)));
+            QuizAttemptEntity.Status.COMPLETED, LocalDateTime.now(ZoneOffset.UTC)));
 
         // Changed answer -> questions changed -> 409.
         mockMvc.perform(put("/api/quizzes/{id}", id).with(user(ownerId)).with(csrf())

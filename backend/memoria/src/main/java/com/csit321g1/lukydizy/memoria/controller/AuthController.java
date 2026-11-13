@@ -21,9 +21,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.csit321g1.lukydizy.memoria.dto.LoginRequest;
-import com.csit321g1.lukydizy.memoria.dto.RegisterRequest;
-import com.csit321g1.lukydizy.memoria.dto.UserProfile;
+import com.csit321g1.lukydizy.memoria.dto.UserDto.LoginRequest;
+import com.csit321g1.lukydizy.memoria.dto.UserDto.RegisterRequest;
+import com.csit321g1.lukydizy.memoria.dto.UserDto.UserProfile;
 import com.csit321g1.lukydizy.memoria.entity.UserEntity;
 import com.csit321g1.lukydizy.memoria.service.UserService;
 

@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.csit321g1.lukydizy.memoria.dto.ReviewerRequest;
-import com.csit321g1.lukydizy.memoria.dto.ReviewerResponse;
+import com.csit321g1.lukydizy.memoria.dto.ReviewerDto.ReviewerRequest;
+import com.csit321g1.lukydizy.memoria.dto.ReviewerDto.ReviewerResponse;
 import com.csit321g1.lukydizy.memoria.service.ReviewerService;
 
 @RestController

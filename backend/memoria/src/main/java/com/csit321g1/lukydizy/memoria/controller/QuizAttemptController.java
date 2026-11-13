@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.csit321g1.lukydizy.memoria.dto.AttemptResponse;
+import com.csit321g1.lukydizy.memoria.dto.QuizAttemptDto.AttemptResponse;
 import com.csit321g1.lukydizy.memoria.service.QuizAttemptService;
 
 /** Attempt history. Attempts are created by the quiz submission endpoint (BE-06). */

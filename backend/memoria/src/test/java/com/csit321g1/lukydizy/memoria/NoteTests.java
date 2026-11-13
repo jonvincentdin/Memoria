@@ -25,8 +25,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import com.csit321g1.lukydizy.memoria.dto.NoteRequest;
 import com.csit321g1.lukydizy.memoria.entity.NoteEntity;
+import com.csit321g1.lukydizy.memoria.dto.NoteDto.NoteRequest;
 import com.csit321g1.lukydizy.memoria.entity.ReviewerEntity;
 import com.csit321g1.lukydizy.memoria.entity.ReviewerNoteEntity;
 import com.csit321g1.lukydizy.memoria.entity.UserEntity;

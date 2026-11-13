@@ -25,6 +25,11 @@ import jakarta.persistence.Table;
 @Table(name = "quiz_attempts")
 public class QuizAttemptEntity {
 
+    /** Status of a quiz attempt. A graded attempt is COMPLETED. */
+    public enum Status {
+        COMPLETED
+    }
+
     // Primary key (AttemptID), generated as a UUID.
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -54,7 +59,7 @@ public class QuizAttemptEntity {
     // Saved as text, e.g. "COMPLETED".
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private AttemptStatus status;
+    private Status status;
 
     // When the attempt was graded (UTC); used for newest-first sorting.
     @Column(name = "completed_at", nullable = false)
@@ -70,7 +75,7 @@ public class QuizAttemptEntity {
         QuizEntity quiz,
         int score,
         int totalQuestions,
-        AttemptStatus status,
+        Status status,
         LocalDateTime completedAt
     ) {
         this.user = user;
@@ -101,7 +106,7 @@ public class QuizAttemptEntity {
         return totalQuestions;
     }
 
-    public AttemptStatus getStatus() {
+    public Status getStatus() {
         return status;
     }
 

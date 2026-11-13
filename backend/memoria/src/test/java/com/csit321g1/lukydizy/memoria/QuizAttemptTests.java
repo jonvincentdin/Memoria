@@ -25,8 +25,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.csit321g1.lukydizy.memoria.dto.AttemptResponse;
 import com.csit321g1.lukydizy.memoria.entity.QuizEntity;
+import com.csit321g1.lukydizy.memoria.dto.QuizAttemptDto.AttemptResponse;
 import com.csit321g1.lukydizy.memoria.entity.UserEntity;
 import com.csit321g1.lukydizy.memoria.exception.InvalidRequestException;
 import com.csit321g1.lukydizy.memoria.exception.ResourceNotFoundException;

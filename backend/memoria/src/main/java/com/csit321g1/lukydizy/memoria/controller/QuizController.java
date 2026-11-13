@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.csit321g1.lukydizy.memoria.dto.AttemptResponse;
-import com.csit321g1.lukydizy.memoria.dto.AttemptSubmissionRequest;
-import com.csit321g1.lukydizy.memoria.dto.QuizRequest;
-import com.csit321g1.lukydizy.memoria.dto.QuizResponse;
-import com.csit321g1.lukydizy.memoria.dto.QuizTakeResponse;
+import com.csit321g1.lukydizy.memoria.dto.QuizAttemptDto.AttemptResponse;
+import com.csit321g1.lukydizy.memoria.dto.QuizAttemptDto.AttemptSubmissionRequest;
+import com.csit321g1.lukydizy.memoria.dto.QuizDto.QuizRequest;
+import com.csit321g1.lukydizy.memoria.dto.QuizDto.QuizResponse;
+import com.csit321g1.lukydizy.memoria.dto.QuizDto.QuizTakeResponse;
 import com.csit321g1.lukydizy.memoria.service.QuizService;
 
 /** Quiz authoring endpoints for the owner. Login and CSRF are enforced by SecurityConfig. */

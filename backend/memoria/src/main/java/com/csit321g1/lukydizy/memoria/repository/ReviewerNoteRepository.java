@@ -5,10 +5,9 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.csit321g1.lukydizy.memoria.entity.ReviewerNoteEntity;
-import com.csit321g1.lukydizy.memoria.entity.ReviewerNoteId;
 
 /** Add links with save/saveAll and remove them with delete/deleteAll. */
-public interface ReviewerNoteRepository extends JpaRepository<ReviewerNoteEntity, ReviewerNoteId> {
+public interface ReviewerNoteRepository extends JpaRepository<ReviewerNoteEntity, ReviewerNoteEntity.CompositeId> {
 
     /** Lists every note link of a reviewer. */
     List<ReviewerNoteEntity> findByReviewer_Id(String reviewerId);

@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.csit321g1.lukydizy.memoria.dto.NoteRequest;
-import com.csit321g1.lukydizy.memoria.dto.NoteResponse;
+import com.csit321g1.lukydizy.memoria.dto.NoteDto.NoteRequest;
+import com.csit321g1.lukydizy.memoria.dto.NoteDto.NoteResponse;
 import com.csit321g1.lukydizy.memoria.service.NoteService;
 
 @RestController

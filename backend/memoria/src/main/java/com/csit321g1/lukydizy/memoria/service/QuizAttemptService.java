@@ -7,9 +7,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.csit321g1.lukydizy.memoria.dto.AttemptResponse;
-import com.csit321g1.lukydizy.memoria.entity.AttemptStatus;
 import com.csit321g1.lukydizy.memoria.entity.QuizAttemptEntity;
+import com.csit321g1.lukydizy.memoria.dto.QuizAttemptDto.AttemptResponse;
 import com.csit321g1.lukydizy.memoria.entity.QuizEntity;
 import com.csit321g1.lukydizy.memoria.exception.InvalidRequestException;
 import com.csit321g1.lukydizy.memoria.exception.ResourceNotFoundException;
@@ -53,7 +52,7 @@ public class QuizAttemptService {
             quiz,
             score,
             totalQuestions,
-            AttemptStatus.COMPLETED,
+            QuizAttemptEntity.Status.COMPLETED,
             LocalDateTime.now(ZoneOffset.UTC)
         );
         // INSERT into quiz_attempts, then convert the saved row to the JSON response.
