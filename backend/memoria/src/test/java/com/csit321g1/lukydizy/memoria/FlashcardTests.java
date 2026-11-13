@@ -25,8 +25,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import com.csit321g1.lukydizy.memoria.dto.FlashcardRequest;
-import com.csit321g1.lukydizy.memoria.dto.FlashcardReviewRequest;
+import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.Request;
+import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.ReviewRequest;
 import com.csit321g1.lukydizy.memoria.entity.FlashcardEntity;
 import com.csit321g1.lukydizy.memoria.entity.ReviewerEntity;
 import com.csit321g1.lukydizy.memoria.entity.UserEntity;
@@ -282,10 +282,10 @@ class FlashcardTests {
     }
 
     private String body(String reviewerId, String front, String back) throws Exception {
-        return objectMapper.writeValueAsString(new FlashcardRequest(reviewerId, front, back));
+        return objectMapper.writeValueAsString(new Request(reviewerId, front, back));
     }
 
     private String reviewBody(int rating) throws Exception {
-        return objectMapper.writeValueAsString(new FlashcardReviewRequest(rating));
+        return objectMapper.writeValueAsString(new ReviewRequest(rating));
     }
 }
