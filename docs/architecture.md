@@ -57,6 +57,7 @@ Registration (`POST /api/auth/register`) and login (`POST /api/auth/login`) veri
 | Note | NoteID, UserID, Title, Content, SourceType, CreatedAt | User → many notes; Reviewer ↔ Note through ReviewerNote |
 | Reviewer | ReviewerID, UserID, Title, Style, Content, CreatedAt | User → many reviewers |
 | ReviewerNote | ReviewerID + NoteID (composite PK) | Reviewer ↔ Note, many-to-many |
+| Flashcard | FlashcardID, UserID, ReviewerID, Front, Back, CreatedAt | User → many flashcards; Reviewer → many flashcards |
 | Quiz | id, ownerId, reviewerId, title | Reviewer → many quizzes |
 | Question | id, quizId, text, choiceA–D, correctChoice | Quiz → many questions |
 | QuizAttempt | AttemptID, UserID, QuizID, Score, TotalQuestions, Status, CompletedAt | Quiz → many attempts |
@@ -87,6 +88,9 @@ Check that parent objects belong to the same user. Save a quiz and its questions
 | GET/PUT/DELETE /api/notes/{id} | Read/update/delete owned note |
 | GET/POST /api/reviewers | List/create reviewers |
 | GET/PUT/DELETE /api/reviewers/{id} | Read/update/delete owned reviewer |
+| GET/POST /api/flashcards | List/create owned flashcards (optional `?reviewerId=` filter) |
+| GET/PUT/DELETE /api/flashcards/{id} | Read/update/delete owned flashcard |
+| POST /api/flashcards/{id}/review | Validate and return a 1–5 study rating; no review history or scheduling |
 | GET/POST /api/quizzes | List/create quizzes |
 | GET/PUT/DELETE /api/quizzes/{id} | Authoring operations; owned content only |
 | GET /api/quizzes/{id}/take | Owner's questions and choices without answer keys |
@@ -98,3 +102,5 @@ Check that parent objects belong to the same user. Save a quiz and its questions
 Quiz submission accepts `{"answers":[{"questionIndex":0,"choiceIndex":2}]}` with zero-based indexes. Leave unanswered questions out of the list; they count as incorrect. The server rejects unknown or duplicate selections, grades the quiz, and saves the attempt in one transaction. Result summaries include quiz title, score, total questions, percentage, status, and completion time. Quiz and attempt reads are restricted to the current owner; another user's resource returns 404. Results intentionally do not include per-question answer review because the ERD has no `AttemptAnswer` table.
 
 Authentication, user CRUD, notes (`/api/notes`), reviewer (`/api/reviewers`), quiz (`/api/quizzes`), and attempt (`/api/attempts`) routes above are implemented. Note create and update take `{ title, content }`; the owner comes from the authenticated session and `SourceType` is `MANUAL`. Reviewer create and update take `{ title, style, content, noteIds: [...] }`; on update, `noteIds` is the full list, so notes left out are unlinked. No external AI API, cloud service, or messaging system is needed.
+
+Flashcard create and update take `{ reviewerId, front, back }`; owner and creation time come from the server, and the reviewer must belong to the authenticated user. Front and Back must be nonblank. The review operation accepts `{ rating }` in the inclusive range 1–5 and returns the validated result. The current class diagram has no review-history or scheduling fields, so review ratings are not persisted.
