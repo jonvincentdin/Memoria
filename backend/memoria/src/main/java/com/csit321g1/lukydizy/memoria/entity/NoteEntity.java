@@ -41,9 +41,19 @@ public class NoteEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    // Notes entered in the app use MANUAL as their source type.
+    // Notes entered in the app use MANUAL; imported files use IMPORT.
     @Column(name = "source_type", nullable = false, length = 30)
     private String sourceType;
+
+    // Original filename for imported notes; null for manual notes.
+    @Column(name = "source_filename", length = 255)
+    private String sourceFilename;
+
+    @Column(name = "archived", nullable = false, columnDefinition = "boolean not null default false")
+    private boolean archived = false;
+
+    @Column(name = "archived_at")
+    private LocalDateTime archivedAt;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -54,10 +64,25 @@ public class NoteEntity {
 
     /** Creates a note owned by the given user. */
     public NoteEntity(UserEntity user, String title, String content, String sourceType, LocalDateTime createdAt) {
+        this(user, title, content, sourceType, null, createdAt);
+    }
+
+    /** Creates a note owned by the given user with an optional source filename. */
+    public NoteEntity(
+        UserEntity user,
+        String title,
+        String content,
+        String sourceType,
+        String sourceFilename,
+        LocalDateTime createdAt
+    ) {
         this.user = user;
         this.title = title;
         this.content = content;
         this.sourceType = sourceType;
+        this.sourceFilename = sourceFilename;
+        this.archived = false;
+        this.archivedAt = null;
         this.createdAt = createdAt;
     }
 
@@ -89,6 +114,26 @@ public class NoteEntity {
 
     public String getSourceType() {
         return sourceType;
+    }
+
+    public String getSourceFilename() {
+        return sourceFilename;
+    }
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    public void setArchived(boolean archived) {
+        this.archived = archived;
+    }
+
+    public LocalDateTime getArchivedAt() {
+        return archivedAt;
+    }
+
+    public void setArchivedAt(LocalDateTime archivedAt) {
+        this.archivedAt = archivedAt;
     }
 
     public LocalDateTime getCreatedAt() {

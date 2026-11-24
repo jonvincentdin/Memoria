@@ -7,7 +7,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.csit321g1.lukydizy.memoria.entity.NoteEntity;
 import com.csit321g1.lukydizy.memoria.dto.NoteDto.NoteRequest;
 import com.csit321g1.lukydizy.memoria.dto.NoteDto.NoteResponse;
 import com.csit321g1.lukydizy.memoria.entity.NoteEntity;
@@ -45,11 +44,29 @@ public class NoteService {
         return toResponse(note);
     }
 
-    /** Lists only the logged-in user's notes, newest first. */
-    @Transactional(readOnly = true)
-    public List<NoteResponse> list() {
+    /** Creates an imported note for the logged-in user and preserves its source filename. */
+    @Transactional
+    public NoteResponse createImported(String title, String content, String sourceFilename) {
         String userId = CurrentUser.id();
-        return notes.findByUser_IdOrderByCreatedAtDesc(userId).stream()
+        NoteEntity note = notes.save(new NoteEntity(
+            users.getReferenceById(userId),
+            title,
+            content,
+            "IMPORT",
+            sourceFilename,
+            LocalDateTime.now(ZoneOffset.UTC)
+        ));
+        return toResponse(note);
+    }
+
+    /** Lists only the logged-in user's active or archived notes, newest first. */
+    @Transactional(readOnly = true)
+    public List<NoteResponse> list(boolean archived) {
+        String userId = CurrentUser.id();
+        List<NoteEntity> found = archived
+            ? notes.findByUser_IdAndArchivedTrueOrderByArchivedAtDescCreatedAtDesc(userId)
+            : notes.findByUser_IdAndArchivedFalseOrderByCreatedAtDesc(userId);
+        return found.stream()
             .map(this::toResponse)
             .toList();
     }
@@ -66,6 +83,28 @@ public class NoteService {
         NoteEntity note = findOwned(id, CurrentUser.id());
         note.setTitle(request.title().trim());
         note.setContent(request.content());
+        return toResponse(note);
+    }
+
+    /** Archives an owned note so it is separated from active notes. */
+    @Transactional
+    public NoteResponse archive(String id) {
+        NoteEntity note = findOwned(id, CurrentUser.id());
+        if (!note.isArchived()) {
+            note.setArchived(true);
+            note.setArchivedAt(LocalDateTime.now(ZoneOffset.UTC));
+        }
+        return toResponse(note);
+    }
+
+    /** Restores an archived owned note back to active notes. */
+    @Transactional
+    public NoteResponse restore(String id) {
+        NoteEntity note = findOwned(id, CurrentUser.id());
+        if (note.isArchived()) {
+            note.setArchived(false);
+            note.setArchivedAt(null);
+        }
         return toResponse(note);
     }
 
@@ -96,6 +135,9 @@ public class NoteService {
             note.getTitle(),
             note.getContent(),
             note.getSourceType(),
+            note.getSourceFilename(),
+            note.isArchived(),
+            note.getArchivedAt(),
             note.getCreatedAt()
         );
     }
