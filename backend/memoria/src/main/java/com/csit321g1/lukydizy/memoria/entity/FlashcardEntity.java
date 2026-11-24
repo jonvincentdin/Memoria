@@ -50,6 +50,25 @@ public class FlashcardEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    // Spaced-repetition scheduling state (nullable for backward compatibility with existing rows).
+    @Column(name = "repetition_count")
+    private Integer repetitionCount;
+
+    @Column(name = "interval_days")
+    private Integer intervalDays;
+
+    @Column(name = "ease_factor")
+    private Double easeFactor;
+
+    @Column(name = "last_rating")
+    private Integer lastRating;
+
+    @Column(name = "last_reviewed_at")
+    private LocalDateTime lastReviewedAt;
+
+    @Column(name = "next_review_at")
+    private LocalDateTime nextReviewAt;
+
     /** Creates an empty flashcard for persistence. */
     public FlashcardEntity() {
     }
@@ -67,6 +86,9 @@ public class FlashcardEntity {
         this.front = front;
         this.back = back;
         this.createdAt = createdAt;
+        this.repetitionCount = 0;
+        this.intervalDays = 0;
+        this.easeFactor = 2.5;
     }
 
     public String getId() {
@@ -106,5 +128,46 @@ public class FlashcardEntity {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public Integer getRepetitionCount() {
+        return repetitionCount;
+    }
+
+    public Integer getIntervalDays() {
+        return intervalDays;
+    }
+
+    public Double getEaseFactor() {
+        return easeFactor;
+    }
+
+    public Integer getLastRating() {
+        return lastRating;
+    }
+
+    public LocalDateTime getLastReviewedAt() {
+        return lastReviewedAt;
+    }
+
+    public LocalDateTime getNextReviewAt() {
+        return nextReviewAt;
+    }
+
+    /** Updates spaced-repetition scheduling fields after a student rates this card. */
+    public void applyReviewSchedule(
+        int repetitionCount,
+        int intervalDays,
+        double easeFactor,
+        int lastRating,
+        LocalDateTime lastReviewedAt,
+        LocalDateTime nextReviewAt
+    ) {
+        this.repetitionCount = repetitionCount;
+        this.intervalDays = intervalDays;
+        this.easeFactor = easeFactor;
+        this.lastRating = lastRating;
+        this.lastReviewedAt = lastReviewedAt;
+        this.nextReviewAt = nextReviewAt;
     }
 }

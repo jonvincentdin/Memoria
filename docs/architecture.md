@@ -57,7 +57,8 @@ Registration (`POST /api/auth/register`) and login (`POST /api/auth/login`) veri
 | Note | NoteID, UserID, Title, Content, SourceType, CreatedAt | User → many notes; Reviewer ↔ Note through ReviewerNote |
 | Reviewer | ReviewerID, UserID, Title, Style, Content, CreatedAt | User → many reviewers |
 | ReviewerNote | ReviewerID + NoteID (composite PK) | Reviewer ↔ Note, many-to-many |
-| Flashcard | FlashcardID, UserID, ReviewerID, Front, Back, CreatedAt | User → many flashcards; Reviewer → many flashcards |
+| Flashcard | FlashcardID, UserID, ReviewerID, Front, Back, CreatedAt, RepetitionCount, IntervalDays, EaseFactor, LastRating, LastReviewedAt, NextReviewAt | User → many flashcards; Reviewer → many flashcards |
+| FlashcardReview | ReviewID, FlashcardID, UserID, Rating, IntervalDays, EaseFactor, ReviewedAt, NextReviewAt | Flashcard → many reviews; User → many reviews |
 | Quiz | id, ownerId, reviewerId, title | Reviewer → many quizzes |
 | Question | id, quizId, text, choiceA–D, correctChoice | Quiz → many questions |
 | QuizAttempt | AttemptID, UserID, QuizID, Score, TotalQuestions, Status, CompletedAt | Quiz → many attempts |
@@ -88,9 +89,11 @@ Check that parent objects belong to the same user. Save a quiz and its questions
 | GET/PUT/DELETE /api/notes/{id} | Read/update/delete owned note |
 | GET/POST /api/reviewers | List/create reviewers |
 | GET/PUT/DELETE /api/reviewers/{id} | Read/update/delete owned reviewer |
-| GET/POST /api/flashcards | List/create owned flashcards (optional `?reviewerId=` filter) |
+| GET/POST /api/flashcards | List/create owned flashcards (optional `?reviewerId=` and `?dueOnly=true` filters) |
+| GET /api/flashcards/reviews | List owned flashcard review history, newest first (optional `?reviewerId=` and `?flashcardId=`) |
+| GET /api/flashcards/progress | Progress summary and due counts for owned flashcards (optional `?reviewerId=`) |
 | GET/PUT/DELETE /api/flashcards/{id} | Read/update/delete owned flashcard |
-| POST /api/flashcards/{id}/review | Validate and return a 1–5 study rating; no review history or scheduling |
+| POST /api/flashcards/{id}/review | Record a 1–5 study rating, persist review history, and compute next SM-2 review date |
 | GET/POST /api/quizzes | List/create quizzes |
 | GET/PUT/DELETE /api/quizzes/{id} | Authoring operations; owned content only |
 | GET /api/quizzes/{id}/take | Owner's questions and choices without answer keys |
@@ -103,4 +106,4 @@ Quiz submission accepts `{"answers":[{"questionIndex":0,"choiceIndex":2}]}` with
 
 Authentication, user CRUD, notes (`/api/notes`), reviewer (`/api/reviewers`), quiz (`/api/quizzes`), and attempt (`/api/attempts`) routes above are implemented. Note create and update take `{ title, content }`; the owner comes from the authenticated session and `SourceType` is `MANUAL`. Reviewer create and update take `{ title, style, content, noteIds: [...] }`; on update, `noteIds` is the full list, so notes left out are unlinked. No external AI API, cloud service, or messaging system is needed.
 
-Flashcard create and update take `{ reviewerId, front, back }`; owner and creation time come from the server, and the reviewer must belong to the authenticated user. Front and Back must be nonblank. The review operation accepts `{ rating }` in the inclusive range 1–5 and returns the validated result. The current class diagram has no review-history or scheduling fields, so review ratings are not persisted.
+Flashcard create and update take `{ reviewerId, front, back }`; owner and creation time come from the server, and the reviewer must belong to the authenticated user. Front and Back must be nonblank. Submitting a study rating (`POST /api/flashcards/{id}/review` with `{ rating }` in `1–5`) persists an immutable `FlashcardReview` row and updates the card's SM-2 scheduling state (`repetitionCount`, `intervalDays`, `easeFactor` floored at `1.3`, `lastRating`, `lastReviewedAt`, and `nextReviewAt` in UTC): ratings `1–2` reset repetitions to `0` and schedule `1` day; ratings `3–5` advance repetitions through `1` day, `6` days, and `round(prevInterval × easeFactor)`. Cards with `nextReviewAt == null` or `nextReviewAt <= now` are due and returned by `?dueOnly=true`.

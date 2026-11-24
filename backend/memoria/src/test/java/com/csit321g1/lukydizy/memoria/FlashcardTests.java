@@ -72,6 +72,7 @@ class FlashcardTests {
         jdbc.update("DELETE FROM reviewer_notes");
         jdbc.update("DELETE FROM quiz_attempts");
         jdbc.update("DELETE FROM quizzes");
+        jdbc.update("DELETE FROM flashcard_reviews");
         jdbc.update("DELETE FROM flashcards");
         jdbc.update("DELETE FROM reviewers");
         jdbc.update("DELETE FROM notes");
@@ -259,6 +260,179 @@ class FlashcardTests {
     void flashcardsRequireLogin() throws Exception {
         mockMvc.perform(get("/api/flashcards"))
             .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/flashcards/reviews"))
+            .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/flashcards/progress"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    /** Submitting reviews persists history, updates SM-2 schedule, and supports due-only queries. */
+    @Test
+    void reviewPersistsHistoryUpdatesScheduleAndFiltersDueCards() throws Exception {
+        UserEntity owner = users.findById(ownerId).orElseThrow();
+        ReviewerEntity revA = reviewers.findById(reviewerA).orElseThrow();
+        ReviewerEntity revB = reviewers.findById(reviewerB).orElseThrow();
+
+        FlashcardEntity overdue = saveFlashcard(owner, revA, "Overdue card", "Answer 1");
+        overdue.applyReviewSchedule(
+            1, 1, 2.5, 4,
+            LocalDateTime.now(ZoneOffset.UTC).minusDays(3),
+            LocalDateTime.now(ZoneOffset.UTC).minusHours(2)
+        );
+        flashcards.save(overdue);
+
+        FlashcardEntity fresh = saveFlashcard(owner, revA, "New card", "Answer 2");
+        FlashcardEntity otherRevCard = saveFlashcard(owner, revB, "Chem card", "Answer 3");
+
+        // Due query returns overdue card before never-reviewed card.
+        mockMvc.perform(get("/api/flashcards")
+                .param("reviewerId", reviewerA)
+                .param("dueOnly", "true")
+                .with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].id").value(overdue.getId()))
+            .andExpect(jsonPath("$[0].due").value(true))
+            .andExpect(jsonPath("$[1].id").value(fresh.getId()))
+            .andExpect(jsonPath("$[1].status").value("NEW"));
+
+        // Review overdue card (second consecutive passing rating -> 6 day interval).
+        mockMvc.perform(post("/api/flashcards/{id}/review", overdue.getId())
+                .with(user(ownerId)).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(reviewBody(4)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.reviewId").exists())
+            .andExpect(jsonPath("$.flashcardId").value(overdue.getId()))
+            .andExpect(jsonPath("$.rating").value(4))
+            .andExpect(jsonPath("$.repetitionCount").value(2))
+            .andExpect(jsonPath("$.intervalDays").value(6))
+            .andExpect(jsonPath("$.easeFactor").value(2.5))
+            .andExpect(jsonPath("$.nextReviewAt").exists())
+            .andExpect(jsonPath("$.status").value("LEARNING"));
+
+        // Third review pushes overdue card to MASTERED (15 day interval).
+        mockMvc.perform(post("/api/flashcards/{id}/review", overdue.getId())
+                .with(user(ownerId)).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(reviewBody(4)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.repetitionCount").value(3))
+            .andExpect(jsonPath("$.intervalDays").value(15))
+            .andExpect(jsonPath("$.status").value("MASTERED"));
+
+        // Now only fresh is due in reviewerA, while overdue + fresh + otherRevCard are all returned when dueOnly=false.
+        mockMvc.perform(get("/api/flashcards")
+                .param("reviewerId", reviewerA)
+                .param("dueOnly", "true")
+                .with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(fresh.getId()));
+
+        mockMvc.perform(get("/api/flashcards")
+                .param("dueOnly", "true")
+                .with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2));
+
+        // Review fresh with failing rating 1 -> resets repetitions and schedules 1 day out.
+        mockMvc.perform(post("/api/flashcards/{id}/review", fresh.getId())
+                .with(user(ownerId)).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(reviewBody(1)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.repetitionCount").value(0))
+            .andExpect(jsonPath("$.intervalDays").value(1))
+            .andExpect(jsonPath("$.status").value("LEARNING"));
+
+        // Review history lists 3 reviews for reviewerA (newest first) and supports flashcardId filter.
+        mockMvc.perform(get("/api/flashcards/reviews")
+                .param("reviewerId", reviewerA)
+                .with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(3))
+            .andExpect(jsonPath("$[0].flashcardId").value(fresh.getId()))
+            .andExpect(jsonPath("$[0].rating").value(1))
+            .andExpect(jsonPath("$[0].reviewerTitle").value("Biology"));
+
+        mockMvc.perform(get("/api/flashcards/reviews")
+                .param("flashcardId", overdue.getId())
+                .with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2));
+
+        // Progress summary for reviewerA: 2 cards, 0 due, 0 new, 1 learning, 1 mastered, 3 reviews, avg rating 3.0.
+        mockMvc.perform(get("/api/flashcards/progress")
+                .param("reviewerId", reviewerA)
+                .with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalCards").value(2))
+            .andExpect(jsonPath("$.dueCards").value(0))
+            .andExpect(jsonPath("$.newCards").value(0))
+            .andExpect(jsonPath("$.learningCards").value(1))
+            .andExpect(jsonPath("$.masteredCards").value(1))
+            .andExpect(jsonPath("$.totalReviews").value(3))
+            .andExpect(jsonPath("$.reviewsToday").value(3))
+            .andExpect(jsonPath("$.averageRating").value(3.0))
+            .andExpect(jsonPath("$.lastReviewedAt").exists())
+            .andExpect(jsonPath("$.nextDueAt").exists());
+
+        // Global progress includes otherRevCard (1 due, 1 new).
+        mockMvc.perform(get("/api/flashcards/progress").with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalCards").value(3))
+            .andExpect(jsonPath("$.dueCards").value(1))
+            .andExpect(jsonPath("$.newCards").value(1));
+
+        // Deleting a reviewed card cleanly deletes its review history too.
+        mockMvc.perform(delete("/api/flashcards/{id}", overdue.getId()).with(user(ownerId)).with(csrf()))
+            .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/flashcards/reviews").param("reviewerId", reviewerA).with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].flashcardId").value(fresh.getId()));
+
+        // Unused variable guard
+        assertEquals(reviewerB, otherRevCard.getReviewer().getId());
+    }
+
+    /** Review history and progress endpoints isolate data per authenticated student. */
+    @Test
+    void reviewHistoryAndProgressEnforceOwnership() throws Exception {
+        UserEntity other = users.findById(otherId).orElseThrow();
+        FlashcardEntity otherCard = saveFlashcard(other, reviewers.findById(otherReviewer).orElseThrow(),
+            "Secret", "Answer");
+
+        mockMvc.perform(post("/api/flashcards/{id}/review", otherCard.getId())
+                .with(user(otherId)).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(reviewBody(5)))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/flashcards/reviews").with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+
+        mockMvc.perform(get("/api/flashcards/reviews")
+                .param("reviewerId", otherReviewer)
+                .with(user(ownerId)))
+            .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get("/api/flashcards/reviews")
+                .param("flashcardId", otherCard.getId())
+                .with(user(ownerId)))
+            .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/api/flashcards/progress")
+                .param("reviewerId", otherReviewer)
+                .with(user(ownerId)))
+            .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get("/api/flashcards/progress").with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalCards").value(0))
+            .andExpect(jsonPath("$.totalReviews").value(0));
     }
 
     private ReviewerEntity saveReviewer(UserEntity owner, String title) {

@@ -1,17 +1,20 @@
 import { useEffect } from 'react'
-import { CircleAlert, ClipboardList, FileText, Plus } from 'lucide-react'
+import { CalendarClock, CircleAlert, ClipboardList, FileText, History, Plus } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { errorMessage, useApiData } from '@/lib/useApiData'
-import { formatDate } from './format'
+import { formatDate, formatShortDate } from './format'
 
 // Lists the logged-in student's reviewers with loading, empty and error states.
 export default function ReviewerList() {
   const [reviewers, retry] = useApiData('/api/reviewers')
+  const [progress] = useApiData('/api/flashcards/progress')
 
   useEffect(() => { document.title = 'Reviewers · Memoria' }, [])
+
+  const summary = progress.status === 'ready' ? progress.data : null
 
   return <section>
     <div className="flex flex-wrap items-end justify-between gap-4">
@@ -21,6 +24,37 @@ export default function ReviewerList() {
       </div>
       <Button asChild size="lg"><a href="#/reviewers/new" className="no-underline"><Plus aria-hidden="true" />New reviewer</a></Button>
     </div>
+
+    {summary && summary.totalCards > 0 && <Card className="mt-6" aria-labelledby="due-summary-heading">
+      <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">
+        <div className="grid gap-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 id="due-summary-heading" className="text-base font-medium">Flashcard schedule</h2>
+            <Badge variant={summary.dueCards > 0 ? 'default' : 'secondary'}>
+              {summary.dueCards > 0 ? `${summary.dueCards} due now` : 'All caught up'}
+            </Badge>
+          </div>
+          <p className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+            <span>{summary.masteredCards} of {summary.totalCards} mastered</span>
+            {summary.dueCards === 0 && summary.nextDueAt && <>
+              <span>·</span>
+              <span className="inline-flex items-center gap-1">
+                <CalendarClock className="size-3.5" aria-hidden="true" />
+                Next due {formatShortDate(summary.nextDueAt)}
+              </span>
+            </>}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {summary.dueCards > 0 && <Button asChild>
+            <a href="#/reviewers/study/due" className="no-underline">Study due ({summary.dueCards})</a>
+          </Button>}
+          <Button asChild variant="outline">
+            <a href="#/reviewers/progress" className="no-underline"><History aria-hidden="true" />Progress &amp; history</a>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>}
 
     <div className="mt-8" aria-live="polite">
       {reviewers.status === 'loading' && <p className="text-muted-foreground">Loading your reviewers…</p>}
