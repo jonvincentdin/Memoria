@@ -8,8 +8,9 @@ export class ApiError extends Error {
 }
 
 export async function apiRequest(path, { method = 'GET', body } = {}) {
+  const isFormData = body instanceof FormData
   const headers = { Accept: 'application/json' }
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  if (body !== undefined && !isFormData) headers['Content-Type'] = 'application/json'
   if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
     const csrfResponse = await fetch(`${API_BASE}/api/auth/csrf`, {
       credentials: 'include',
@@ -24,7 +25,7 @@ export async function apiRequest(path, { method = 'GET', body } = {}) {
     method,
     credentials: 'include',
     headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
   })
   const payload = response.status === 204 ? null : await response.json()
   if (!response.ok) throw new ApiError(payload?.error || 'The request could not be completed.', response.status)
