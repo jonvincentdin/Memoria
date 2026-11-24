@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.ProgressSummary;
 import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.Request;
 import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.Response;
+import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.ReviewHistoryItem;
 import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.ReviewRequest;
 import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.ReviewResponse;
 import com.csit321g1.lukydizy.memoria.service.FlashcardService;
@@ -41,12 +43,30 @@ public class FlashcardController {
         return service.create(request);
     }
 
-    /** Lists the current user's flashcards; add ?reviewerId= to filter by reviewer. */
+    /** Lists the current user's flashcards; supports ?reviewerId= and ?dueOnly=true filters. */
     @GetMapping
     public List<Response> list(
+        @RequestParam(name = "reviewerId", required = false) String reviewerId,
+        @RequestParam(name = "dueOnly", defaultValue = "false") boolean dueOnly
+    ) {
+        return service.list(reviewerId, dueOnly);
+    }
+
+    /** Lists the current user's flashcard review history, newest first. */
+    @GetMapping("/reviews")
+    public List<ReviewHistoryItem> listReviews(
+        @RequestParam(name = "reviewerId", required = false) String reviewerId,
+        @RequestParam(name = "flashcardId", required = false) String flashcardId
+    ) {
+        return service.listReviews(reviewerId, flashcardId);
+    }
+
+    /** Summarizes flashcard progress and due counts for the user or a single reviewer. */
+    @GetMapping("/progress")
+    public ProgressSummary progress(
         @RequestParam(name = "reviewerId", required = false) String reviewerId
     ) {
-        return service.list(reviewerId);
+        return service.progress(reviewerId);
     }
 
     /** Returns one flashcard owned by the current user. */
@@ -64,7 +84,7 @@ public class FlashcardController {
         return service.update(id, request);
     }
 
-    /** Validates and returns the study rating for an owned flashcard. */
+    /** Records a study rating, updates spaced-repetition scheduling, and returns the outcome. */
     @PostMapping("/{id}/review")
     public ReviewResponse review(
         @PathVariable("id") String id,

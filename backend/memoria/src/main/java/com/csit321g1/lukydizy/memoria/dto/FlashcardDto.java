@@ -25,13 +25,21 @@ public final class FlashcardDto {
     ) {
     }
 
-    /** Public flashcard fields returned without persistence relationships. */
+    /** Public flashcard fields including spaced-repetition state, returned without persistence relationships. */
     public record Response(
         String id,
         String reviewerId,
         String front,
         String back,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        int repetitionCount,
+        int intervalDays,
+        double easeFactor,
+        Integer lastRating,
+        LocalDateTime lastReviewedAt,
+        LocalDateTime nextReviewAt,
+        boolean due,
+        String status
     ) {
     }
 
@@ -44,10 +52,47 @@ public final class FlashcardDto {
     ) {
     }
 
-    /** Validated study result returned without scheduling or review-history persistence. */
+    /** Persisted study review result including the updated spaced-repetition schedule. */
     public record ReviewResponse(
+        String reviewId,
         String flashcardId,
-        int rating
+        int rating,
+        int repetitionCount,
+        int intervalDays,
+        double easeFactor,
+        LocalDateTime reviewedAt,
+        LocalDateTime nextReviewAt,
+        String status
+    ) {
+    }
+
+    /** One recorded flashcard review entry returned in newest-first history lists. */
+    public record ReviewHistoryItem(
+        String id,
+        String flashcardId,
+        String reviewerId,
+        String reviewerTitle,
+        String front,
+        int rating,
+        int intervalDays,
+        double easeFactor,
+        LocalDateTime reviewedAt,
+        LocalDateTime nextReviewAt
+    ) {
+    }
+
+    /** Aggregated flashcard study progress across all reviewers or a single reviewer. */
+    public record ProgressSummary(
+        long totalCards,
+        long dueCards,
+        long newCards,
+        long learningCards,
+        long masteredCards,
+        long totalReviews,
+        long reviewsToday,
+        Double averageRating,
+        LocalDateTime lastReviewedAt,
+        LocalDateTime nextDueAt
     ) {
     }
 }
