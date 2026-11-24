@@ -4,6 +4,6 @@ import { ChartColumn, ClipboardList, NotebookPen, Target } from 'lucide-react'
 export const SECTIONS = [
   { route: 'notes', label: 'Notes', icon: NotebookPen, description: 'Write and organize what you learn.', ready: true },
   { route: 'reviewers', label: 'Reviewers', icon: ClipboardList, description: 'Turn notes into quick recaps.', ready: true },
-  { route: 'quizzes', label: 'Quizzes', icon: Target, description: 'Practice with questions from your notes.', ready: false },
+  { route: 'quizzes', label: 'Quizzes', icon: Target, description: 'Practice with questions from your notes.', ready: true },
   { route: 'results', label: 'Results', icon: ChartColumn, description: 'See how your practice is going.', ready: false },
 ]

@@ -6,6 +6,7 @@ import AuthPage from './pages/AuthPage'
 import ComingSoon from './pages/ComingSoon'
 import Dashboard from './pages/Dashboard'
 import Notes from './pages/notes/Notes'
+import Quizzes from './pages/quizzes/Quizzes'
 import Reviewers from './pages/reviewers/Reviewers'
 import { SECTIONS } from './sections'
 
@@ -71,6 +72,7 @@ function App() {
       {mode === 'notes'
         ? <Notes path={path.slice(1)} />
         : mode === 'reviewers' ? <Reviewers path={path.slice(1)} />
+        : mode === 'quizzes' ? <Quizzes path={path.slice(1)} />
         : section ? <ComingSoon key={mode} section={section} /> : <Dashboard user={profile} />}
     </AppShell>
   }
