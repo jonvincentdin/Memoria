@@ -28,6 +28,9 @@ public final class NoteDto {
         String title,
         String content,
         String sourceType,
+        String sourceFilename,
+        boolean archived,
+        LocalDateTime archivedAt,
         LocalDateTime createdAt
     ) {
     }
