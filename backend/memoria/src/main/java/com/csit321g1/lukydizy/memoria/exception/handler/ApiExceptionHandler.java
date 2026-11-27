@@ -9,6 +9,9 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import com.csit321g1.lukydizy.memoria.dto.ApiError;
 import com.csit321g1.lukydizy.memoria.exception.EmailAlreadyUsedException;
@@ -77,5 +80,18 @@ public class ApiExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleUnreadableBody() {
         return ResponseEntity.badRequest().body(new ApiError("Invalid request body."));
+    }
+
+    /** Returns 413 when an uploaded file exceeds the maximum allowed size. */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiError> handleMaxUploadSize() {
+        return ResponseEntity.status(HttpStatus.valueOf(413))
+            .body(new ApiError("File is too large. Maximum allowed size is 5 MB."));
+    }
+
+    /** Returns 400 when a multipart file part is missing or malformed. */
+    @ExceptionHandler({ MissingServletRequestPartException.class, MultipartException.class })
+    public ResponseEntity<ApiError> handleMultipartError() {
+        return ResponseEntity.badRequest().body(new ApiError("A valid file upload is required."));
     }
 }

@@ -218,6 +218,78 @@ class NoteTests {
     void notesRequireLogin() throws Exception {
         mockMvc.perform(get("/api/notes"))
             .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/notes/any-id/archive").with(csrf()))
+            .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/notes/any-id/restore").with(csrf()))
+            .andExpect(status().isUnauthorized());
+    }
+
+    /** Archives and restores an owned note, separating archived notes from active notes. */
+    @Test
+    void ownerCanArchiveAndRestoreNote() throws Exception {
+        UserEntity owner = users.findById(ownerId).orElseThrow();
+        NoteEntity active = saveNote(owner, "Active Note", "Body A", LocalDateTime.now(ZoneOffset.UTC).minusHours(1));
+        NoteEntity toArchive = saveNote(owner, "Archive Me", "Body B", LocalDateTime.now(ZoneOffset.UTC));
+
+        mockMvc.perform(post("/api/notes/{id}/archive", toArchive.getId()).with(user(ownerId)).with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.archived").value(true))
+            .andExpect(jsonPath("$.archivedAt").isNotEmpty());
+
+        mockMvc.perform(get("/api/notes").with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(active.getId()));
+
+        mockMvc.perform(get("/api/notes").param("archived", "true").with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(toArchive.getId()))
+            .andExpect(jsonPath("$[0].archived").value(true));
+
+        mockMvc.perform(post("/api/notes/{id}/restore", toArchive.getId()).with(user(ownerId)).with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.archived").value(false))
+            .andExpect(jsonPath("$.archivedAt").doesNotExist());
+
+        mockMvc.perform(get("/api/notes").with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2));
+
+        mockMvc.perform(get("/api/notes").param("archived", "true").with(user(ownerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    /** Another student cannot archive or restore a note they do not own. */
+    @Test
+    void anotherStudentCannotArchiveOrRestoreNote() throws Exception {
+        NoteEntity note = saveNote(users.findById(ownerId).orElseThrow(), "Private", "Content",
+            LocalDateTime.now(ZoneOffset.UTC));
+
+        mockMvc.perform(post("/api/notes/{id}/archive", note.getId()).with(user(otherId)).with(csrf()))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.error").value("Note not found."));
+        mockMvc.perform(post("/api/notes/{id}/restore", note.getId()).with(user(otherId)).with(csrf()))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.error").value("Note not found."));
+    }
+
+    /** Deleting an archived note linked to a reviewer is still blocked with 409. */
+    @Test
+    void cannotDeleteArchivedNoteLinkedToReviewer() throws Exception {
+        UserEntity owner = users.findById(ownerId).orElseThrow();
+        NoteEntity note = saveNote(owner, "Linked", "Reviewer source", LocalDateTime.now(ZoneOffset.UTC));
+        ReviewerEntity reviewer = reviewers.save(new ReviewerEntity(
+            owner, "Review", "Summary", "Reviewed content", LocalDateTime.now(ZoneOffset.UTC)));
+        reviewerNotes.save(new ReviewerNoteEntity(reviewer, note));
+
+        mockMvc.perform(post("/api/notes/{id}/archive", note.getId()).with(user(ownerId)).with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.archived").value(true));
+
+        mockMvc.perform(delete("/api/notes/{id}", note.getId()).with(user(ownerId)).with(csrf()))
+            .andExpect(status().isConflict());
     }
 
     /** Saves an entity for setup cases that need explicit ownership or creation times. */
