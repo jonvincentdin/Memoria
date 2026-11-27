@@ -7,32 +7,40 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.ProgressSummary;
 import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.Request;
 import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.Response;
+import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.ReviewHistoryItem;
 import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.ReviewRequest;
 import com.csit321g1.lukydizy.memoria.dto.FlashcardDto.ReviewResponse;
 import com.csit321g1.lukydizy.memoria.entity.FlashcardEntity;
+import com.csit321g1.lukydizy.memoria.entity.FlashcardReviewEntity;
 import com.csit321g1.lukydizy.memoria.entity.ReviewerEntity;
 import com.csit321g1.lukydizy.memoria.exception.InvalidRequestException;
 import com.csit321g1.lukydizy.memoria.exception.ResourceNotFoundException;
 import com.csit321g1.lukydizy.memoria.repository.FlashcardRepository;
+import com.csit321g1.lukydizy.memoria.repository.FlashcardReviewRepository;
 import com.csit321g1.lukydizy.memoria.repository.ReviewerRepository;
 import com.csit321g1.lukydizy.memoria.repository.UserRepository;
+import com.csit321g1.lukydizy.memoria.service.SpacedRepetitionScheduler.ScheduleResult;
 
 @Service
 public class FlashcardService {
 
     private final FlashcardRepository flashcards;
+    private final FlashcardReviewRepository reviews;
     private final ReviewerRepository reviewers;
     private final UserRepository users;
 
     /** Creates the service with its repositories. */
     public FlashcardService(
         FlashcardRepository flashcards,
+        FlashcardReviewRepository reviews,
         ReviewerRepository reviewers,
         UserRepository users
     ) {
         this.flashcards = flashcards;
+        this.reviews = reviews;
         this.reviewers = reviewers;
         this.users = users;
     }
@@ -42,37 +50,49 @@ public class FlashcardService {
     public Response create(Request request) {
         String userId = CurrentUser.id();
         ReviewerEntity reviewer = findOwnedReviewer(request.reviewerId(), userId);
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         FlashcardEntity flashcard = flashcards.save(new FlashcardEntity(
             users.getReferenceById(userId),
             reviewer,
             request.front().trim(),
             request.back().trim(),
-            LocalDateTime.now(ZoneOffset.UTC)
+            now
         ));
-        return toResponse(flashcard);
+        return toResponse(flashcard, now);
     }
 
-    /** Lists the logged-in user's cards, optionally filtered by one of their reviewers. */
+    /**
+     * Lists the logged-in user's cards, optionally filtered by one of their reviewers
+     * and/or restricted to currently due cards.
+     */
     @Transactional(readOnly = true)
-    public List<Response> list(String reviewerId) {
+    public List<Response> list(String reviewerId, boolean dueOnly) {
         String userId = CurrentUser.id();
-        List<FlashcardEntity> found;
-        if (reviewerId == null || reviewerId.isBlank()) {
-            found = flashcards.findByUser_IdOrderByCreatedAtDesc(userId);
-        } else {
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        boolean hasReviewer = reviewerId != null && !reviewerId.isBlank();
+        if (hasReviewer) {
             findOwnedReviewer(reviewerId, userId);
-            found = flashcards.findByReviewer_IdAndUser_IdOrderByCreatedAtDesc(reviewerId, userId);
         }
-        return found.stream().map(this::toResponse).toList();
+        List<FlashcardEntity> found;
+        if (dueOnly) {
+            found = hasReviewer
+                ? flashcards.findDueByReviewerIdAndUserId(reviewerId, userId, now)
+                : flashcards.findDueByUserId(userId, now);
+        } else {
+            found = hasReviewer
+                ? flashcards.findByReviewer_IdAndUser_IdOrderByCreatedAtDesc(reviewerId, userId)
+                : flashcards.findByUser_IdOrderByCreatedAtDesc(userId);
+        }
+        return found.stream().map(card -> toResponse(card, now)).toList();
     }
 
     /** Returns one of the logged-in user's flashcards. */
     @Transactional(readOnly = true)
     public Response get(String id) {
-        return toResponse(findOwned(id, CurrentUser.id()));
+        return toResponse(findOwned(id, CurrentUser.id()), LocalDateTime.now(ZoneOffset.UTC));
     }
 
-    /** Replaces the text and reviewer of an owned flashcard. */
+    /** Replaces the text and reviewer of an owned flashcard while preserving scheduling state. */
     @Transactional
     public Response update(String id, Request request) {
         String userId = CurrentUser.id();
@@ -80,23 +100,177 @@ public class FlashcardService {
         flashcard.setReviewer(findOwnedReviewer(request.reviewerId(), userId));
         flashcard.setFront(request.front().trim());
         flashcard.setBack(request.back().trim());
-        return toResponse(flashcard);
+        return toResponse(flashcard, LocalDateTime.now(ZoneOffset.UTC));
     }
 
-    /** Deletes one of the logged-in user's flashcards. */
+    /** Deletes one of the logged-in user's flashcards and its review history. */
     @Transactional
     public void delete(String id) {
-        flashcards.delete(findOwned(id, CurrentUser.id()));
+        FlashcardEntity flashcard = findOwned(id, CurrentUser.id());
+        reviews.deleteByFlashcard_Id(flashcard.getId());
+        flashcards.delete(flashcard);
     }
 
     /**
-     * Validates a study rating for an owned card and returns the outcome.
-     * The ERD has no review-history fields, so this operation does not persist a rating or schedule.
+     * Records a 1-5 study rating for an owned flashcard, updates its SM-2 schedule,
+     * and persists a review-history row.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public ReviewResponse review(String id, ReviewRequest request) {
-        FlashcardEntity flashcard = findOwned(id, CurrentUser.id());
-        return new ReviewResponse(flashcard.getId(), request.rating());
+        String userId = CurrentUser.id();
+        FlashcardEntity flashcard = findOwned(id, userId);
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+
+        ScheduleResult schedule = SpacedRepetitionScheduler.nextSchedule(
+            flashcard.getRepetitionCount(),
+            flashcard.getIntervalDays(),
+            flashcard.getEaseFactor(),
+            request.rating(),
+            now
+        );
+
+        flashcard.applyReviewSchedule(
+            schedule.repetitionCount(),
+            schedule.intervalDays(),
+            schedule.easeFactor(),
+            request.rating(),
+            now,
+            schedule.nextReviewAt()
+        );
+
+        FlashcardReviewEntity savedReview = reviews.save(new FlashcardReviewEntity(
+            flashcard,
+            users.getReferenceById(userId),
+            request.rating(),
+            schedule.intervalDays(),
+            schedule.easeFactor(),
+            now,
+            schedule.nextReviewAt()
+        ));
+
+        String status = SpacedRepetitionScheduler.masteryStatus(
+            schedule.repetitionCount(),
+            request.rating(),
+            now
+        );
+
+        return new ReviewResponse(
+            savedReview.getId(),
+            flashcard.getId(),
+            request.rating(),
+            schedule.repetitionCount(),
+            schedule.intervalDays(),
+            schedule.easeFactor(),
+            now,
+            schedule.nextReviewAt(),
+            status
+        );
+    }
+
+    /** Lists the logged-in user's flashcard review history, newest first. */
+    @Transactional(readOnly = true)
+    public List<ReviewHistoryItem> listReviews(String reviewerId, String flashcardId) {
+        String userId = CurrentUser.id();
+        boolean hasReviewer = reviewerId != null && !reviewerId.isBlank();
+        boolean hasFlashcard = flashcardId != null && !flashcardId.isBlank();
+
+        if (hasReviewer) {
+            findOwnedReviewer(reviewerId, userId);
+        }
+        if (hasFlashcard) {
+            FlashcardEntity card = findOwned(flashcardId, userId);
+            if (hasReviewer && !card.getReviewer().getId().equals(reviewerId)) {
+                return List.of();
+            }
+            return reviews.findByUserIdAndFlashcardIdWithDetails(userId, flashcardId)
+                .stream()
+                .map(this::toReviewHistoryItem)
+                .toList();
+        }
+        if (hasReviewer) {
+            return reviews.findByUserIdAndReviewerIdWithDetails(userId, reviewerId)
+                .stream()
+                .map(this::toReviewHistoryItem)
+                .toList();
+        }
+        return reviews.findByUserIdWithDetails(userId)
+            .stream()
+            .map(this::toReviewHistoryItem)
+            .toList();
+    }
+
+    /** Computes flashcard progress summary across all reviewers or a single owned reviewer. */
+    @Transactional(readOnly = true)
+    public ProgressSummary progress(String reviewerId) {
+        String userId = CurrentUser.id();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime startOfToday = now.toLocalDate().atStartOfDay();
+        boolean hasReviewer = reviewerId != null && !reviewerId.isBlank();
+
+        List<FlashcardEntity> cards;
+        List<FlashcardReviewEntity> reviewList;
+        if (hasReviewer) {
+            findOwnedReviewer(reviewerId, userId);
+            cards = flashcards.findByReviewer_IdAndUser_IdOrderByCreatedAtDesc(reviewerId, userId);
+            reviewList = reviews.findByUserIdAndReviewerIdWithDetails(userId, reviewerId);
+        } else {
+            cards = flashcards.findByUser_IdOrderByCreatedAtDesc(userId);
+            reviewList = reviews.findByUserIdWithDetails(userId);
+        }
+
+        long dueCards = 0;
+        long newCards = 0;
+        long learningCards = 0;
+        long masteredCards = 0;
+        LocalDateTime nextDueAt = null;
+
+        for (FlashcardEntity card : cards) {
+            if (SpacedRepetitionScheduler.isDue(card.getNextReviewAt(), now)) {
+                dueCards++;
+            } else if (card.getNextReviewAt() != null
+                && (nextDueAt == null || card.getNextReviewAt().isBefore(nextDueAt))) {
+                nextDueAt = card.getNextReviewAt();
+            }
+
+            String status = SpacedRepetitionScheduler.masteryStatus(
+                card.getRepetitionCount(),
+                card.getLastRating(),
+                card.getLastReviewedAt()
+            );
+            switch (status) {
+                case SpacedRepetitionScheduler.STATUS_NEW -> newCards++;
+                case SpacedRepetitionScheduler.STATUS_MASTERED -> masteredCards++;
+                default -> learningCards++;
+            }
+        }
+
+        long totalReviews = reviewList.size();
+        long reviewsToday = 0;
+        long ratingSum = 0;
+        for (FlashcardReviewEntity entry : reviewList) {
+            ratingSum += entry.getRating();
+            if (!entry.getReviewedAt().isBefore(startOfToday)) {
+                reviewsToday++;
+            }
+        }
+
+        Double averageRating = totalReviews == 0
+            ? null
+            : Math.round((ratingSum * 100.0) / totalReviews) / 100.0;
+        LocalDateTime lastReviewedAt = reviewList.isEmpty() ? null : reviewList.get(0).getReviewedAt();
+
+        return new ProgressSummary(
+            cards.size(),
+            dueCards,
+            newCards,
+            learningCards,
+            masteredCards,
+            totalReviews,
+            reviewsToday,
+            averageRating,
+            lastReviewedAt,
+            nextDueAt
+        );
     }
 
     /** Finds a reviewer owned by the user; missing and foreign reviewers are treated alike. */
@@ -111,14 +285,50 @@ public class FlashcardService {
             .orElseThrow(() -> new ResourceNotFoundException("Flashcard not found."));
     }
 
-    /** Converts the entity into the API response shape. */
-    private Response toResponse(FlashcardEntity flashcard) {
+    /** Converts the entity into the API response shape with normalized scheduling defaults. */
+    private Response toResponse(FlashcardEntity flashcard, LocalDateTime now) {
+        int repetitions = flashcard.getRepetitionCount() == null ? 0 : flashcard.getRepetitionCount();
+        int intervalDays = flashcard.getIntervalDays() == null ? 0 : flashcard.getIntervalDays();
+        double easeFactor = flashcard.getEaseFactor() == null
+            ? SpacedRepetitionScheduler.DEFAULT_EASE_FACTOR
+            : flashcard.getEaseFactor();
+        boolean due = SpacedRepetitionScheduler.isDue(flashcard.getNextReviewAt(), now);
+        String status = SpacedRepetitionScheduler.masteryStatus(
+            flashcard.getRepetitionCount(),
+            flashcard.getLastRating(),
+            flashcard.getLastReviewedAt()
+        );
         return new Response(
             flashcard.getId(),
             flashcard.getReviewer().getId(),
             flashcard.getFront(),
             flashcard.getBack(),
-            flashcard.getCreatedAt()
+            flashcard.getCreatedAt(),
+            repetitions,
+            intervalDays,
+            easeFactor,
+            flashcard.getLastRating(),
+            flashcard.getLastReviewedAt(),
+            flashcard.getNextReviewAt(),
+            due,
+            status
+        );
+    }
+
+    private ReviewHistoryItem toReviewHistoryItem(FlashcardReviewEntity entry) {
+        FlashcardEntity card = entry.getFlashcard();
+        ReviewerEntity reviewer = card.getReviewer();
+        return new ReviewHistoryItem(
+            entry.getId(),
+            card.getId(),
+            reviewer.getId(),
+            reviewer.getTitle(),
+            card.getFront(),
+            entry.getRating(),
+            entry.getIntervalDays(),
+            entry.getEaseFactor(),
+            entry.getReviewedAt(),
+            entry.getNextReviewAt()
         );
     }
 }
