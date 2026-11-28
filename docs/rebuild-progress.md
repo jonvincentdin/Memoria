@@ -6,7 +6,7 @@ Each feature is verified against the retained Spring APIs, committed and pushed 
 | Order | Feature | Status |
 | --- | --- | --- |
 | 1 | Accounts: signup, login, logout, sessions and route protection | Verified |
-| 2 | Dashboard and account/navigation overview | Pending |
+| 2 | Dashboard and account/navigation overview | Verified |
 | 3 | Notes CRUD, archive and restore | Pending |
 | 4 | MD/TXT/PDF/DOCX/PPTX imports | Pending |
 | 5 | Reviewers, styles and linked notes | Pending |

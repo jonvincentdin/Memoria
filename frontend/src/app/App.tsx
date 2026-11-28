@@ -4,6 +4,7 @@ import { AuthPage } from '../features/auth/AuthPage'
 import { apiRequest, ApiError } from '../shared/api/client'
 import { Failure, Loading, PageTitle } from '../shared/ui/common'
 import { Shell } from './Shell'
+import { Dashboard } from '../features/dashboard/Dashboard'
 
 const pathFromHash = () => window.location.hash.replace(/^#\/?/, '').split('/').map(value => { try { return decodeURIComponent(value) } catch { return value } })
 
@@ -33,5 +34,7 @@ export function App() {
   if (publicPage) return user ? null : <AuthPage key={page} signup={page === 'signup'} onAuthenticated={profile => { setUser(profile); window.location.hash = '#/dashboard' }} />
   if (!user) return null
   async function logout() { await apiRequest('/api/auth/logout', { method: 'POST' }); setUser(null); window.location.hash = '#/login' }
-  return <Shell user={user} current={page} logout={logout}><div key={path.join('/')}><PageTitle title="Your account" description="You’re signed in to your personal study space." /><section className="paper-panel"><h2>{user.name}</h2><p>{user.email}</p></section></div></Shell>
+  return <Shell user={user} current={page} logout={logout}><div key={path.join('/')}>
+    {page === 'dashboard' ? <Dashboard user={user} /> : <PageTitle title="Page not found" description="Choose a destination from the navigation to get back to your study space." />}
+  </div></Shell>
 }
