@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Archive, ArchiveRestore, ArrowRight, Pencil, Plus } from 'lucide-react'
+import { Archive, ArchiveRestore, ArrowRight, Pencil, Plus, Upload } from 'lucide-react'
 import { apiRequest } from '../../shared/api'
 import { useResource } from '../../shared/api/use-resource'
 import { dateOnly } from '../../shared/format'
@@ -8,9 +8,11 @@ import { Input } from '../../shared/ui/input'
 import { Back, Empty, Failure, Field, Loading, Notice, PageTitle } from '../../shared/ui/common'
 import { DeleteAction } from '../../shared/ui/delete-action'
 import type { Note } from './types'
+import { ImportNote } from './ImportNote'
 
 export function NotesPage({ path }: { path: string[] }) {
   const [id, action] = path
+  if (id === 'import') return <ImportNote />
   if (id === 'new') return <NoteForm />
   if (id && action === 'edit') return <NoteForm id={id} />
   if (id) return <NoteDetail id={id} />
@@ -20,7 +22,7 @@ export function NotesPage({ path }: { path: string[] }) {
 function NoteList() {
   const [archived, setArchived] = useState(false)
   const resource = useResource<Note[]>(`/api/notes?archived=${archived}`)
-  return <><PageTitle title="Notes" description="Keep the ideas, explanations, and details you want to remember." actions={<Button asChild><a href="#/notes/new"><Plus aria-hidden="true" />New note</a></Button>} /><div className="tabs" aria-label="Note visibility"><Button variant="outline" aria-pressed={!archived} onClick={() => setArchived(false)}>Active notes</Button><Button variant="outline" aria-pressed={archived} onClick={() => setArchived(true)}>Archived</Button></div>
+  return <><PageTitle title="Notes" description="Keep the ideas, explanations, and details you want to remember." actions={<><Button asChild variant="outline"><a href="#/notes/import"><Upload aria-hidden="true" />Import file</a></Button><Button asChild><a href="#/notes/new"><Plus aria-hidden="true" />New note</a></Button></>} /><div className="tabs" aria-label="Note visibility"><Button variant="outline" aria-pressed={!archived} onClick={() => setArchived(false)}>Active notes</Button><Button variant="outline" aria-pressed={archived} onClick={() => setArchived(true)}>Archived</Button></div>
     {resource.loading ? <Loading label="Loading notes…" /> : resource.error ? <Failure error={resource.error} retry={resource.reload} /> : !resource.data?.length ? <Empty title={archived ? 'Your archive is empty' : 'A place for your next idea'} action={!archived && <Button asChild><a href="#/notes/new">Write your first note</a></Button>}>{archived ? 'Archived notes stay here until you restore or delete them.' : 'Write something new, then build on it as you learn.'}</Empty> : <ul className="resource-list">{resource.data.map(note => <li key={note.id}><a className="resource-row" href={`#/notes/${encodeURIComponent(note.id)}`}><div><h2>{note.title}</h2><p>{note.content.slice(0, 150)}{note.content.length > 150 ? '…' : ''}</p><div className="meta"><span>{dateOnly(note.createdAt)}</span><span>{note.sourceFilename ? 'Imported file' : 'Written note'}</span>{note.archived && <span className="pill">Archived</span>}</div></div><ArrowRight size={18} aria-hidden="true" /></a></li>)}</ul>}
   </>
 }

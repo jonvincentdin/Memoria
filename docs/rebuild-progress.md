@@ -8,7 +8,7 @@ Each feature is verified against the retained Spring APIs, committed and pushed 
 | 1 | Accounts: signup, login, logout, sessions and route protection | Verified |
 | 2 | Dashboard and account/navigation overview | Verified |
 | 3 | Notes CRUD, archive and restore | Verified |
-| 4 | MD/TXT/PDF/DOCX/PPTX imports | Pending |
+| 4 | MD/TXT/PDF/DOCX/PPTX imports | Verified |
 | 5 | Reviewers, styles and linked notes | Pending |
 | 6 | Practice quiz authoring | Pending |
 | 7 | Quiz taking, grading and saved results | Pending |
