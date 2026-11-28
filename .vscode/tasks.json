@@ -1,0 +1,29 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Backend: run (Local PostgreSQL)",
+            "type": "shell",
+            "command": "./mvnw",
+            "windows": {
+                "command": ".\\mvnw.cmd"
+            },
+            "args": ["spring-boot:run"],
+            "options": {
+                "cwd": "${workspaceFolder}/backend",
+                "env": {
+                    "SPRING_PROFILES_ACTIVE": "default",
+                    "SPRING_DATASOURCE_URL": "jdbc:postgresql://localhost:5432/memoria",
+                    "SPRING_DATASOURCE_USERNAME": "memoria",
+                    "SPRING_DATASOURCE_PASSWORD": "memoria",
+                    "SESSION_COOKIE_SECURE": "false"
+                }
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        }
+    ]
+}

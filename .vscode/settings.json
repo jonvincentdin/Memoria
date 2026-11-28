@@ -1,5 +1,11 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "automatic",
-    "java.project.importOnFirstTimeStartup": "automatic"
+    "java.project.importOnFirstTimeStartup": "automatic",
+    "java.import.exclusions": [
+        "**/node_modules/**",
+        "**/target/**",
+        "**/.git/**",
+        "**/backend/memoria/**"
+    ]
 }

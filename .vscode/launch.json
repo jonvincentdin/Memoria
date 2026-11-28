@@ -1,14 +1,20 @@
 {
+    "version": "0.2.0",
     "configurations": [
         {
             "type": "java",
-            "name": "Spring Boot - MemoriaApplication (Supabase)",
+            "name": "MemoriaApplication",
             "request": "launch",
             "cwd": "${workspaceFolder}/backend",
             "mainClass": "com.csit321g1.lukydizy.memoria.MemoriaApplication",
             "projectName": "memoria",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env.local"
+            "env": {
+                "SPRING_PROFILES_ACTIVE": "default",
+                "SPRING_DATASOURCE_URL": "jdbc:postgresql://localhost:5432/memoria",
+                "SPRING_DATASOURCE_USERNAME": "memoria",
+                "SPRING_DATASOURCE_PASSWORD": "memoria",
+                "SESSION_COOKIE_SECURE": "false"
+            }
         },
         {
             "type": "java",
@@ -19,8 +25,22 @@
             "projectName": "memoria",
             "args": "",
             "env": {
-                "SPRING_DATASOURCE_PASSWORD": "memoria"
+                "SPRING_PROFILES_ACTIVE": "default",
+                "SPRING_DATASOURCE_URL": "jdbc:postgresql://localhost:5432/memoria",
+                "SPRING_DATASOURCE_USERNAME": "memoria",
+                "SPRING_DATASOURCE_PASSWORD": "memoria",
+                "SESSION_COOKIE_SECURE": "false"
             }
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot - MemoriaApplication (Supabase)",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/backend",
+            "mainClass": "com.csit321g1.lukydizy.memoria.MemoriaApplication",
+            "projectName": "memoria",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env.local"
         }
     ]
 }

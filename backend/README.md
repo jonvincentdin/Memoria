@@ -2,7 +2,19 @@
 
 One Java 17 Spring Boot application built with the Maven wrapper in this folder.
 The canonical entry is `src/main/java/com/csit321g1/lukydizy/memoria/MemoriaApplication.java`.
-Use VS Code's Java Run button or the root launch configuration.
+Open `Memoria.code-workspace` at the repository root, then use VS Code's Java Run
+button or the `MemoriaApplication` launch configuration. It explicitly selects the
+Maven project, backend working directory, and local PostgreSQL connection.
+
+If VS Code was open before the directory flattening, its old folder workspace can
+retain a duplicate `memoria` project pointing at `backend/memoria`. Opening the
+checked-in workspace gives Java a fresh project index. Alternatively, run
+**Java: Clean Java Language Server Workspace** and allow VS Code to restart.
+Do not recreate the old nested application directory.
+
+**Terminal > Run Task > Backend: run (Local PostgreSQL)** runs the Maven wrapper
+without depending on the Java language server's project cache. Stop any running
+backend before starting another instance on port 8080.
 
 ## Feature packages
 
