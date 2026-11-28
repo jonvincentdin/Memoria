@@ -1,84 +1,77 @@
-﻿# memoria
+# Memoria
 
-Turn scattered notes into structured knowledge.
+Memoria is being rebuilt around the original learning-journal UI and workflows,
+with an independent Java Spring Boot API and PostgreSQL database.
 
-Memoria is a small student study web application for **CSIT340 - Industry Elective**, under **Sir Eugene C. Bussico**. Students keep personal notes, organize reviewers, take multiple-choice quizzes, and revisit saved results in one place.
+## Restart status
 
-## Problem and target users
+- `frontend/`: fresh React + TypeScript + Vite project. Old screens and dependencies
+  are removed. A minimal entry and tested API client are ready for the rebuild.
+- `backend/`: working APIs retained and reorganized by feature.
+- Additional replacement-plan features are pending; this restart does not implement them.
 
-Students often store notes in separate files and applications, manually prepare reviewers, and lose track of previous quiz scores. Memoria serves students who want a simple place to organize study material and practice what they have learned.
+## Structure
 
-## Project status
+```text
+frontend/src/
+  app/               Application entry and root component
+  features/          Feature screens and domain API adapters
+  shared/api/        Session/CSRF-aware Spring API transport
+  shared/ui/         Reusable components
+  shared/styles/     Global styles
+backend/src/main/java/com/csit321g1/lukydizy/memoria/
+  auth/              Session authentication
+  users/             Accounts and profiles
+  notes/             Notes, imports and archive
+  reviewers/         Reviewers and linked notes
+  quizzes/           Quiz authoring and taking
+  attempts/          Saved attempts and results
+  flashcards/        Cards, reviews and scheduling
+  shared/security/   Security configuration and current identity
+  shared/error/      API errors and exception handling
+```
 
-User registration, login, logout, and basic user CRUD are implemented through the backend API. Notes, reviewers, quizzes, and results remain planned. This is a simplified subject-project adaptation inspired by [DandD-Official/Memoria](https://github.com/DandD-Official/Memoria), not a copy of its existing application. Do not overlay these files on that repository without reviewing the differences.
+Tests mirror backend feature packages. Historical Java guides are in `docs/reference/`.
 
-## Planned features
+## Run
 
-| Module | Features |
-| --- | --- |
-| Accounts | Register, log in, log out (implemented) |
-| Users | Create, list, read, update, and delete (implemented) |
-| Notes | Create, list/read, edit/delete personal notes |
-| Reviewers | Create/edit/delete a reviewer linked to a note; browse/read reviewers |
-| Quizzes | Create/edit/delete multiple-choice quizzes; take a quiz |
-| Results | View a graded result; view attempt history |
+Use Node.js 24 LTS, Java 17+, and a separate PostgreSQL database configured with
+[SETUP.md](SETUP.md). Start the apps in separate terminals:
 
-The MVP contains these **5 modules and 12 backlog features**. Reviewers and questions are entered manually; students may paste text prepared elsewhere. Quizzes have four choices and one correct answer. No AI subscription is required.
+```powershell
+# backend/
+.\mvnw.cmd spring-boot:run
 
-Excluded: direct AI API integration, Google Drive/Notion connections, document parsing/OCR, public sharing, admin panels, flashcards, spaced repetition, timers, mobile apps, and production deployment. See [requirements](docs/requirements.md) and the [feature backlog](docs/backlog.md).
+# frontend/
+npm ci
+npm run dev
+```
 
-## Technology stack
+Open <http://localhost:5173>. Vite proxies `/api` and `/actuator` to port 8080.
+Health: <http://localhost:8080/actuator/health>.
 
-- Frontend: React with JavaScript, Vite, basic CSS, browser fetch.
-- Backend: Java with Spring Boot, Spring Web, Spring Security, and Spring Data JPA.
-- Database: Supabase PostgreSQL (hosted, team-shared). Local PostgreSQL is supported as a backup. H2 is used only for running tests.
-- Authentication: Spring Security sessions and BCrypt password hashing.
-- Collaboration: GitHub and Trello.
+## Verify
 
-Use one frontend and one backend application; no microservices or extra infrastructure.
+```powershell
+# backend/
+.\mvnw.cmd clean test
 
-## Team
+# frontend/
+npm run lint
+npm test
+npm run build
+```
 
-| Name | GitHub username | Role |
-| --- | --- | --- |
-| Kyle Angelo C. Castro | @Kaylooww | Software Developer |
-| Jon Vincent F. Din | @jonvincentdin | Software Developer |
-| Luther Derrick E. Dira | @Lterckski | Software Developer |
-| Zyril Ryle R. Restauro | @ZyrilR | Software Developer |
+Backend tests use in-memory H2 and do not modify PostgreSQL.
+See [backend setup](backend/README.md), [frontend setup](frontend/README.md),
+and [architecture](docs/architecture.md).
 
-Everyone is a Software Developer. Feature ownership and peer review assignments are recorded in [team roles](docs/team-roles.md).
+## References
 
-## Local setup
+[Task board](https://trello.com/b/SdkcppLc/memoria-lukydizy) |
+[Original product](https://github.com/DandD-Official/Memoria) |
+[Contribution guide](CONTRIBUTING.md)
 
-The React/Vite app is in `frontend`; the Spring Boot API is in `backend`. Basic user CRUD is available; the other study features remain planned.
-
-1. Install Node.js LTS and a JDK 17 or newer. Install PostgreSQL locally or obtain Supabase credentials from a teammate.
-2. Follow [SETUP.md](SETUP.md) to configure your database (local PostgreSQL or Supabase) and set environment variables.
-3. In `backend`, run `.\mvnw.cmd spring-boot:run` (PowerShell) or `sh ./mvnw spring-boot:run` (macOS/Linux). The Maven wrapper downloads Maven automatically.
-4. Check http://localhost:8080/actuator/health for `{"status":"UP"}`.
-5. In a second terminal, run `npm install` and `npm run dev` from `frontend`. Open the address printed by Vite.
-
-See the [backend run guide](backend/README.md) for tests and packaging.
-
-## Collaboration
-
-[Task board](https://trello.com/b/6ac6eddf43b1215e8ab78dc7/memoria-lukydizy) · [Contribution guide](CONTRIBUTING.md) · [Sprint plan](docs/sprint-plan.md)
-
-The board URL uses the board ID from the supplied invite without its invitation token; verify it after signing in. Board visibility and membership have not been checked. The new subject-project GitHub URL must be recorded in [submission](docs/submission.md) after repository creation.
-
-Keep `main` stable. Use `feature/<issue>-<short-name>` or `fix/<issue>-<short-name>`, link a GitHub issue and Trello card, and request at least one peer review. Never commit real secrets.
-
-## Documentation
-
-- [Database setup](SETUP.md)
-- [Requirements and scope](docs/requirements.md)
-- [Architecture and data model](docs/architecture.md)
-- [Team assignments](docs/team-roles.md)
-- [Backlog](docs/backlog.md) and [CSV card data](docs/backlog.csv)
-- [One-week sprint plan](docs/sprint-plan.md)
-- [GitHub and board setup](docs/repository-setup.md)
-- [Traceability exercise](docs/traceability.md)
-- [Submission and contribution evidence](docs/submission.md)
-- [Manual verification checklist](tests/README.md)
-
-No license has been assigned. Decide ownership and licensing together before publishing code or reusing source code from another project.
+Older course-project requirements/backlog/sprint documents are historical.
+The replacement board defines current rebuild scope. No license has been assigned;
+confirm ownership/licensing before reusing external source.

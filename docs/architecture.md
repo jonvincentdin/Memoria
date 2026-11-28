@@ -1,109 +1,55 @@
-# Architecture
+# Rebuild architecture
 
-## Proposed design
+One React/TypeScript frontend, one Java Spring Boot backend, and one independently
+configured PostgreSQL database. The original product supplies the UI/workflow
+reference, not the backend or database.
 
-React JavaScript browser UI → Spring Boot REST API → Supabase PostgreSQL database (hosted).
-
-Use a single Spring Boot application with controller, service, repository, and entity packages. React has pages/components and one small API helper; avoid extra architectural layers. The Supabase PostgreSQL database persists data between backend restarts and is shared across the team. Run one backend instance and use sample data only. A local PostgreSQL database is supported as a backup; see `SETUP.md` at the repo root. Account registration, login, logout, and user CRUD are implemented; note and quiz APIs remain planned.
-
-## Folder layout
-
-- `frontend/`: planned Vite React JavaScript application.
-- `backend/`: planned Spring Boot Maven project.
-- `tests/`: shared manual acceptance checklist; generated Java tests belong in `backend/src/test/java`.
-- `docs/`: requirements, architecture, backlog, plans, and evidence.
-- `.github/`: GitHub issue and pull request templates.
-
-The frontend and backend scaffolds are present. See the [backend run guide](../backend/README.md) for startup and health verification. Application features below remain planned.
-
-## Local configuration
-
-After scaffolding, add this proxy to the Vite configuration's existing `defineConfig` object (preserve its React plugin):
-
-```javascript
-server: {
-  proxy: {
-    '/api': { target: 'http://localhost:8080', changeOrigin: true }
-  }
-}
+```text
+Browser (React)
+  -> same-origin /api requests with session cookie and CSRF header
+  -> Vite proxy in development / reverse proxy in production
+  -> Spring Security
+  -> feature controller -> service -> JPA repository -> PostgreSQL
 ```
 
-Frontend calls `/api/...` using `credentials: 'include'`. Keep requests on the Vite origin through the proxy to avoid unnecessary CORS setup.
+## Backend
 
-Configure Spring using `application.properties`, with environment overrides. Set the three `SPRING_DATASOURCE_*` environment variables before starting — see `backend/src/SETUP.md` for exact steps.
+Feature packages group controllers, DTOs, services, entities and repositories:
 
-```properties
-server.port=${SERVER_PORT:8080}
-spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/memoria}
-spring.datasource.username=${SPRING_DATASOURCE_USERNAME:memoria}
-spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:}
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-server.servlet.session.cookie.http-only=true
-server.servlet.session.cookie.same-site=lax
-```
+- `auth` / `users`: sessions and accounts.
+- `notes` / `reviewers`: documents, imports and linked study guides.
+- `quizzes` / `attempts`: authoring/taking and persisted results.
+- `flashcards`: cards, review history, spaced repetition and progress.
+- `shared.security` / `shared.error`: common security and HTTP error contracts.
 
-The default profile connects to a local PostgreSQL instance. Activate `supabase` profile (`SPRING_PROFILES_ACTIVE=supabase`) to use the hosted Supabase database; the same three variables are still required. Tests always use H2 in-memory (`@ActiveProfiles("test")`). `ddl-auto=update` is a prototype convenience only. A root `.env` is not loaded automatically; Vite separately reads `frontend/.env.local`. Variables beginning `VITE_` are browser-visible and must contain no secrets.
+The application class stays above the features; tests mirror their packages.
+Table/column mappings and endpoint URLs are retained. Cross-feature imports are
+explicit; keep domain rules in their owning feature.
 
-## Authentication and user API
+Books, sharing, workspaces, integrations, notifications, preferences and offline
+sync become sibling packages when implemented. Avoid empty services/microservices
+for planned domains.
 
-Registration (`POST /api/auth/register`) and login (`POST /api/auth/login`) verify user credentials and create a server-side session. Passwords are hashed with BCrypt and never returned. Logout invalidates the session; `GET /api/auth/me` returns the current user's public profile. State-changing requests require a CSRF token from `GET /api/auth/csrf`; the frontend API helper fetches and sends it automatically. Authenticated user CRUD operations are available under `/api/users`.
+## Frontend
 
-## Minimal entities
+`app/` composes the application; `features/` owns screens and domain API adapters.
+`shared/api/` handles transport/session/CSRF. `shared/ui/` and `shared/styles/`
+hold shared components and styles.
 
-| Entity | Main fields | Relationships |
-| --- | --- | --- |
-| User | UserID, Name, Email (unique), PasswordHash, CreatedAt | Owns notes, reviewers, quizzes, attempts |
-| Note | NoteID, UserID, Title, Content, SourceType, CreatedAt | User → many notes; Reviewer ↔ Note through ReviewerNote |
-| Reviewer | ReviewerID, UserID, Title, Style, Content, CreatedAt | User → many reviewers |
-| ReviewerNote | ReviewerID + NoteID (composite PK) | Reviewer ↔ Note, many-to-many |
-| Flashcard | FlashcardID, UserID, ReviewerID, Front, Back, CreatedAt, RepetitionCount, IntervalDays, EaseFactor, LastRating, LastReviewedAt, NextReviewAt | User → many flashcards; Reviewer → many flashcards |
-| FlashcardReview | ReviewID, FlashcardID, UserID, Rating, IntervalDays, EaseFactor, ReviewedAt, NextReviewAt | Flashcard → many reviews; User → many reviews |
-| Quiz | id, ownerId, reviewerId, title | Reviewer → many quizzes |
-| Question | id, quizId, text, choiceA–D, correctChoice | Quiz → many questions |
-| QuizAttempt | AttemptID, UserID, QuizID, Score, TotalQuestions, Status, CompletedAt | Quiz → many attempts |
+The fresh frontend contains a minimal entry screen. Old authentication and study
+screens are intentionally removed. New screens must reflect real backend
+capabilities and preserve the original theme and workflows.
 
-**ERD decisions (Increment 1):**
+## Data and security
 
-- **Reviewer ↔ Note** is many-to-many through the `ReviewerNote` join table (`reviewer_notes`). A reviewer needs at least one note, and every linked note must belong to the reviewer's owner. This replaces the older one-note-per-reviewer design.
-- **Quiz attempts** store only the result summary in `QuizAttempt` (`quiz_attempts`). Status is `COMPLETED` for a graded attempt. The ERD has no `AttemptAnswer` table, so per-question answer review is deferred as stretch work. Do not add that table without a formal ERD update.
-- A reviewer used by a quiz (`QuizReviewer`) cannot be deleted. The API returns 409 with a clear message.
+- Database credentials/provider secrets remain on the backend.
+- Authentication uses server-side sessions and HttpOnly cookies.
+- Writes obtain CSRF tokens from `/api/auth/csrf`; authentication rotates tokens.
+- Services check the authenticated owner for study content.
+- Tests use in-memory H2; PostgreSQL configuration remains separate.
+- Existing Hibernate schema updates remain for development. Production migrations
+  and the expanded schema are separate tasks.
 
-Check that parent objects belong to the same user. Save a quiz and its questions transactionally. Use a transaction for grading and saving an attempt. Enforce the edit/delete restrictions in requirements to retain history without snapshots or complex versioning.
-
-## API surface
-
-| Route | Purpose |
-| --- | --- |
-| GET /api/auth/csrf | Obtain a CSRF token |
-| POST /api/auth/register | Register an account |
-| POST /api/auth/login | Start a session |
-| POST /api/auth/logout | Invalidate the session |
-| GET /api/auth/me | Get the current user |
-| GET /api/users | List users |
-| POST /api/users | Create a user |
-| GET /api/users/{id} | Read a user |
-| PUT /api/users/{id} | Update a user |
-| DELETE /api/users/{id} | Delete a user |
-| GET/POST /api/notes | List/create notes |
-| GET/PUT/DELETE /api/notes/{id} | Read/update/delete owned note |
-| GET/POST /api/reviewers | List/create reviewers |
-| GET/PUT/DELETE /api/reviewers/{id} | Read/update/delete owned reviewer |
-| GET/POST /api/flashcards | List/create owned flashcards (optional `?reviewerId=` and `?dueOnly=true` filters) |
-| GET /api/flashcards/reviews | List owned flashcard review history, newest first (optional `?reviewerId=` and `?flashcardId=`) |
-| GET /api/flashcards/progress | Progress summary and due counts for owned flashcards (optional `?reviewerId=`) |
-| GET/PUT/DELETE /api/flashcards/{id} | Read/update/delete owned flashcard |
-| POST /api/flashcards/{id}/review | Record a 1–5 study rating, persist review history, and compute next SM-2 review date |
-| GET/POST /api/quizzes | List/create quizzes |
-| GET/PUT/DELETE /api/quizzes/{id} | Authoring operations; owned content only |
-| GET /api/quizzes/{id}/take | Owner's questions and choices without answer keys |
-| POST /api/quizzes/{id}/attempts | Grade submitted choices on the server and save the result |
-| GET /api/attempts | Personal history, newest first (optional `?quizId=`) |
-| GET /api/attempts/{id} | Saved result summary |
-| DELETE /api/attempts/{id} | Delete owned attempt |
-
-Quiz submission accepts `{"answers":[{"questionIndex":0,"choiceIndex":2}]}` with zero-based indexes. Leave unanswered questions out of the list; they count as incorrect. The server rejects unknown or duplicate selections, grades the quiz, and saves the attempt in one transaction. Result summaries include quiz title, score, total questions, percentage, status, and completion time. Quiz and attempt reads are restricted to the current owner; another user's resource returns 404. Results intentionally do not include per-question answer review because the ERD has no `AttemptAnswer` table.
-
-Authentication, user CRUD, notes (`/api/notes`), reviewer (`/api/reviewers`), quiz (`/api/quizzes`), and attempt (`/api/attempts`) routes above are implemented. Note create and update take `{ title, content }`; the owner comes from the authenticated session and `SourceType` is `MANUAL`. Reviewer create and update take `{ title, style, content, noteIds: [...] }`; on update, `noteIds` is the full list, so notes left out are unlinked. No external AI API, cloud service, or messaging system is needed.
-
-Flashcard create and update take `{ reviewerId, front, back }`; owner and creation time come from the server, and the reviewer must belong to the authenticated user. Front and Back must be nonblank. Submitting a study rating (`POST /api/flashcards/{id}/review` with `{ rating }` in `1–5`) persists an immutable `FlashcardReview` row and updates the card's SM-2 scheduling state (`repetitionCount`, `intervalDays`, `easeFactor` floored at `1.3`, `lastRating`, `lastReviewedAt`, and `nextReviewAt` in UTC): ratings `1–2` reset repetitions to `0` and schedule `1` day; ratings `3–5` advance repetitions through `1` day, `6` days, and `round(prevInterval × easeFactor)`. Cards with `nextReviewAt == null` or `nextReviewAt <= now` are due and returned by `?dueOnly=true`.
+See [backend setup](../backend/README.md) and [frontend setup](../frontend/README.md).
+Earlier course-project documents and `docs/reference/` guides are historical.
+The replacement board defines the current rebuild scope.

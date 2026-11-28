@@ -1,0 +1,19 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #244b3a;
+  background: #f7f5ef;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+body { margin: 0; min-width: 320px; }
+main { margin: 12vh auto; padding: 2rem; max-width: 56rem; }
+h1 { margin: 0; font-size: clamp(2rem, 5vw, 3rem); font-weight: 600; }
+p { color: #58665d; line-height: 1.6; }
+* { box-sizing: border-box; }
+:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+
+@media (prefers-color-scheme: dark) {
+  :root { color: #dbe7dd; background: #1b211e; }
+  p { color: #a7b5ab; }
+}

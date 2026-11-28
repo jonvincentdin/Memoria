@@ -1,16 +1,63 @@
-# React + Vite
+# Memoria frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Fresh React + TypeScript + Vite project. The old screens are removed; feature
+screens will be rebuilt incrementally.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Use Node.js 24 LTS (tests use Node's native TypeScript support).
 
-## React Compiler
+```powershell
+npm ci
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Open <http://localhost:5173>. Start Spring Boot separately on port 8080.
+Development and preview servers proxy `/api` and `/actuator` to the backend.
+Ports are strict so a second instance cannot silently change the origin.
 
-## Expanding the ESLint configuration
+For another backend address, copy `.env.example` to `.env.local`, set
+`BACKEND_URL`, and restart Vite. This value belongs to the server proxy and
+is not exposed as a browser-side `VITE_*` variable.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Structure
+
+- `src/app/`: entry and application composition.
+- `src/features/`: domain screens and API adapters; see its README.
+- `src/shared/api/`: transport matching Spring's session and CSRF contract.
+- `src/shared/ui/`: shared components added as needed.
+- `src/shared/styles/`: global styles.
+- `tests/`: API client behavior tests using Node's built-in runner.
+
+Spring Boot owns data, permissions, integrations and secrets. Do not add
+a separate Node backend or browser database SDK.
+
+## API calls
+
+```ts
+import { apiRequest } from './shared/api/client'
+
+const notes = await apiRequest<Note[]>('/api/notes')
+await apiRequest('/api/notes', {
+  method: 'POST',
+  body: JSON.stringify({ title: 'Biology', content: 'Cell structure' }),
+})
+```
+
+`Note` is the response type defined by the feature implementing that API.
+The client sends cookies, gets a fresh CSRF token for every write, preserves
+multipart boundaries, rejects external URLs, and throws `ApiError` with the
+backend status/message. Callers own loading/error state and may pass an
+`AbortSignal`.
+
+## Verify
+
+```powershell
+npm run lint
+npm test
+npm run build
+npm run preview
+```
+
+Assets go into `dist/`. Preview is for local verification. A production host
+must route `/api` and `/actuator` to Spring Boot and configure HTTPS/cookies.

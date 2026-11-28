@@ -12,7 +12,7 @@
 	<artifactId>memoria</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>memoria</name>
-	<description/>
+	<description>Independent Memoria study API with PostgreSQL persistence</description>
 	<url/>
 	<licenses>
 		<license/>
