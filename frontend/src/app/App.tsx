@@ -6,6 +6,7 @@ import { Failure, Loading, PageTitle } from '../shared/ui/common'
 import { Shell } from './Shell'
 import { Dashboard } from '../features/dashboard/Dashboard'
 import { NotesPage } from '../features/notes/NotesPage'
+import { ReviewersPage } from '../features/reviewers/ReviewersPage'
 
 const pathFromHash = () => window.location.hash.replace(/^#\/?/, '').split('/').map(value => { try { return decodeURIComponent(value) } catch { return value } })
 
@@ -36,6 +37,6 @@ export function App() {
   if (!user) return null
   async function logout() { await apiRequest('/api/auth/logout', { method: 'POST' }); setUser(null); window.location.hash = '#/login' }
   return <Shell user={user} current={page} logout={logout}><div key={path.join('/')}>
-    {page === 'dashboard' ? <Dashboard user={user} /> : page === 'notes' ? <NotesPage path={path.slice(1)} /> : <PageTitle title="Page not found" description="Choose a destination from the navigation to get back to your study space." />}
+    {page === 'dashboard' ? <Dashboard user={user} /> : page === 'notes' ? <NotesPage path={path.slice(1)} /> : page === 'reviewers' ? <ReviewersPage path={path.slice(1)} /> : <PageTitle title="Page not found" description="Choose a destination from the navigation to get back to your study space." />}
   </div></Shell>
 }

@@ -9,6 +9,7 @@ import { Back, Empty, Failure, Field, Loading, Notice, PageTitle } from '../../s
 import { DeleteAction } from '../../shared/ui/delete-action'
 import type { Note } from './types'
 import { ImportNote } from './ImportNote'
+import { RelatedReviewers } from '../reviewers/ReviewersPage'
 
 export function NotesPage({ path }: { path: string[] }) {
   const [id, action] = path
@@ -37,7 +38,7 @@ function NoteDetail({ id }: { id: string }) {
   if (resource.error || !resource.data) return <><Back href="#/notes">All notes</Back><Failure error={resource.error} retry={resource.reload} /></>
   const note = resource.data
   return <><Back href="#/notes">All notes</Back><PageTitle title={note.title} description={`Created ${dateOnly(note.createdAt)}`} actions={<><Button asChild variant="outline"><a href={`#/notes/${encodeURIComponent(id)}/edit`}><Pencil aria-hidden="true" />Edit</a></Button><Button variant="outline" onClick={archive} disabled={pending}>{note.archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}{pending ? 'Saving…' : note.archived ? 'Restore' : 'Archive'}</Button><DeleteAction name={note.title} remove={() => apiRequest(url, { method: 'DELETE' })} onDeleted={() => { window.location.hash = '#/notes' }} /></>} />
-    <div className="meta">{note.archived && <span className="pill">Archived{note.archivedAt ? ` ${dateOnly(note.archivedAt)}` : ''}</span>}{note.sourceFilename && <span>Imported from {note.sourceFilename}</span>}</div>{!!error && <Notice error={error} />}<article className="reading section-gap">{note.content}</article>
+    <div className="meta">{note.archived && <span className="pill">Archived{note.archivedAt ? ` ${dateOnly(note.archivedAt)}` : ''}</span>}{note.sourceFilename && <span>Imported from {note.sourceFilename}</span>}</div>{!!error && <Notice error={error} />}<article className="reading section-gap">{note.content}</article><RelatedReviewers noteId={id} />
   </>
 }
 
