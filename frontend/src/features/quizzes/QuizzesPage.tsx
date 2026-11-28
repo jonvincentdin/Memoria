@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { ArrowRight, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowRight, Pencil, Play, Plus, Trash2 } from 'lucide-react'
 import { apiRequest } from '../../shared/api'
 import { useResource } from '../../shared/api/use-resource'
 import { dateOnly } from '../../shared/format'
@@ -9,10 +9,13 @@ import { Back, Empty, Failure, Field, Loading, Notice, PageTitle } from '../../s
 import { DeleteAction } from '../../shared/ui/delete-action'
 import type { Quiz, QuizQuestion } from './types'
 import type { Reviewer } from '../reviewers/types'
+import { QuizTaking, QuizResult, SavedAttempts } from './QuizTaking'
 
 export function QuizzesPage({ path }: { path: string[] }) {
   const [id, action] = path
   if (id === 'new') return <QuizForm />
+  if (id && action === 'take') return <QuizTaking id={id} />
+  if (id && action === 'results' && path[2]) return <QuizResult quizId={id} attemptId={path[2]} />
   if (id && action === 'edit') return <QuizForm id={id} />
   if (id) return <QuizDetail id={id} />
   return <QuizList />
@@ -29,7 +32,7 @@ function QuizDetail({ id }: { id: string }) {
   if (resource.loading) return <Loading label="Opening quiz…" />
   if (resource.error || !resource.data) return <><Back href="#/quizzes">All quizzes</Back><Failure error={resource.error} retry={resource.reload} /></>
   const quiz = resource.data
-  return <><Back href="#/quizzes">All quizzes</Back><PageTitle title={quiz.title} description={`${quiz.questions.length} multiple-choice ${quiz.questions.length === 1 ? 'question' : 'questions'} · Created ${dateOnly(quiz.createdAt)}`} actions={<><Button asChild variant="outline"><a href={`#/quizzes/${encodeURIComponent(id)}/edit`}><Pencil aria-hidden="true" />Edit</a></Button><DeleteAction name={quiz.title} remove={() => apiRequest(url, { method: 'DELETE' })} onDeleted={() => { window.location.hash = '#/quizzes' }} /></>} /><span className="pill">Practice</span>{quiz.hasAttempts && <p className="status-note">This quiz has saved attempts. Its questions are locked, and it cannot be deleted while those attempts exist. You can still edit its title and reviewer links.</p>}<section className="section-gap"><h2>Study from these reviewers</h2><ul className="linked-list">{quiz.reviewers.map(reviewer => <li key={reviewer.id}><a href={`#/reviewers/${encodeURIComponent(reviewer.id)}`}>{reviewer.title}<ArrowRight size={16} aria-hidden="true" /></a></li>)}</ul></section></>
+  return <><Back href="#/quizzes">All quizzes</Back><PageTitle title={quiz.title} description={`${quiz.questions.length} multiple-choice ${quiz.questions.length === 1 ? 'question' : 'questions'} · Created ${dateOnly(quiz.createdAt)}`} actions={<><Button asChild><a href={`#/quizzes/${encodeURIComponent(id)}/take`}><Play aria-hidden="true" />Take quiz</a></Button><Button asChild variant="outline"><a href={`#/quizzes/${encodeURIComponent(id)}/edit`}><Pencil aria-hidden="true" />Edit</a></Button><DeleteAction name={quiz.title} remove={() => apiRequest(url, { method: 'DELETE' })} onDeleted={() => { window.location.hash = '#/quizzes' }} /></>} /><span className="pill">Practice</span>{quiz.hasAttempts && <p className="status-note">This quiz has saved attempts. Its questions are locked, and it cannot be deleted while those attempts exist. You can still edit its title and reviewer links.</p>}<section className="section-gap"><h2>Study from these reviewers</h2><ul className="linked-list">{quiz.reviewers.map(reviewer => <li key={reviewer.id}><a href={`#/reviewers/${encodeURIComponent(reviewer.id)}`}>{reviewer.title}<ArrowRight size={16} aria-hidden="true" /></a></li>)}</ul></section><SavedAttempts quizId={id} /></>
 }
 
 function QuizForm({ id }: { id?: string }) {
