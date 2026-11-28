@@ -86,7 +86,7 @@ $env:SPRING_DATASOURCE_PASSWORD = 'choose-a-local-password'
 ### 4. Run the backend
 
 ```powershell
-cd backend/memoria
+cd backend
 .\mvnw.cmd spring-boot:run
 ```
 
@@ -132,7 +132,7 @@ $env:SPRING_DATASOURCE_PASSWORD = 'your-supabase-db-password'
 ### 3. Run the backend
 
 ```powershell
-cd backend/memoria
+cd backend
 .\mvnw.cmd spring-boot:run
 ```
 
@@ -150,7 +150,7 @@ GET http://localhost:8080/actuator/health
 Tests always use an in-memory H2 database — no real PostgreSQL needed.
 
 ```powershell
-cd backend/memoria
+cd backend
 .\mvnw.cmd test
 ```
 

@@ -8,13 +8,13 @@ Use a single Spring Boot application with controller, service, repository, and e
 
 ## Folder layout
 
-- `frontend/memoria/`: planned Vite React JavaScript application.
-- `backend/memoria/`: planned Spring Boot Maven project.
-- `tests/`: shared manual acceptance checklist; generated Java tests belong in `backend/memoria/src/test/java`.
+- `frontend/`: planned Vite React JavaScript application.
+- `backend/`: planned Spring Boot Maven project.
+- `tests/`: shared manual acceptance checklist; generated Java tests belong in `backend/src/test/java`.
 - `docs/`: requirements, architecture, backlog, plans, and evidence.
 - `.github/`: GitHub issue and pull request templates.
 
-The frontend and backend scaffolds are present. See the [backend run guide](../backend/memoria/README.md) for startup and health verification. Application features below remain planned.
+The frontend and backend scaffolds are present. See the [backend run guide](../backend/README.md) for startup and health verification. Application features below remain planned.
 
 ## Local configuration
 
@@ -30,7 +30,7 @@ server: {
 
 Frontend calls `/api/...` using `credentials: 'include'`. Keep requests on the Vite origin through the proxy to avoid unnecessary CORS setup.
 
-Configure Spring using `application.properties`, with environment overrides. Set the three `SPRING_DATASOURCE_*` environment variables before starting — see `backend/memoria/src/SETUP.md` for exact steps.
+Configure Spring using `application.properties`, with environment overrides. Set the three `SPRING_DATASOURCE_*` environment variables before starting — see `backend/src/SETUP.md` for exact steps.
 
 ```properties
 server.port=${SERVER_PORT:8080}
@@ -43,7 +43,7 @@ server.servlet.session.cookie.http-only=true
 server.servlet.session.cookie.same-site=lax
 ```
 
-The default profile connects to a local PostgreSQL instance. Activate `supabase` profile (`SPRING_PROFILES_ACTIVE=supabase`) to use the hosted Supabase database; the same three variables are still required. Tests always use H2 in-memory (`@ActiveProfiles("test")`). `ddl-auto=update` is a prototype convenience only. A root `.env` is not loaded automatically; Vite separately reads `frontend/memoria/.env.local`. Variables beginning `VITE_` are browser-visible and must contain no secrets.
+The default profile connects to a local PostgreSQL instance. Activate `supabase` profile (`SPRING_PROFILES_ACTIVE=supabase`) to use the hosted Supabase database; the same three variables are still required. Tests always use H2 in-memory (`@ActiveProfiles("test")`). `ddl-auto=update` is a prototype convenience only. A root `.env` is not loaded automatically; Vite separately reads `frontend/.env.local`. Variables beginning `VITE_` are browser-visible and must contain no secrets.
 
 ## Authentication and user API
 

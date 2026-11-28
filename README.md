@@ -50,15 +50,15 @@ Everyone is a Software Developer. Feature ownership and peer review assignments 
 
 ## Local setup
 
-The React/Vite app is in `frontend/memoria`; the Spring Boot API is in `backend/memoria`. Basic user CRUD is available; the other study features remain planned.
+The React/Vite app is in `frontend`; the Spring Boot API is in `backend`. Basic user CRUD is available; the other study features remain planned.
 
 1. Install Node.js LTS and a JDK 17 or newer. Install PostgreSQL locally or obtain Supabase credentials from a teammate.
 2. Follow [SETUP.md](SETUP.md) to configure your database (local PostgreSQL or Supabase) and set environment variables.
-3. In `backend/memoria`, run `.\mvnw.cmd spring-boot:run` (PowerShell) or `sh ./mvnw spring-boot:run` (macOS/Linux). The Maven wrapper downloads Maven automatically.
+3. In `backend`, run `.\mvnw.cmd spring-boot:run` (PowerShell) or `sh ./mvnw spring-boot:run` (macOS/Linux). The Maven wrapper downloads Maven automatically.
 4. Check http://localhost:8080/actuator/health for `{"status":"UP"}`.
-5. In a second terminal, run `npm install` and `npm run dev` from `frontend/memoria`. Open the address printed by Vite.
+5. In a second terminal, run `npm install` and `npm run dev` from `frontend`. Open the address printed by Vite.
 
-See the [backend run guide](backend/memoria/README.md) for tests and packaging.
+See the [backend run guide](backend/README.md) for tests and packaging.
 
 ## Collaboration
 
