@@ -10,7 +10,7 @@ Each feature is verified against the retained Spring APIs, committed and pushed 
 | 3 | Notes CRUD, archive and restore | Verified |
 | 4 | MD/TXT/PDF/DOCX/PPTX imports | Verified |
 | 5 | Reviewers, styles and linked notes | Verified |
-| 6 | Practice quiz authoring | Pending |
+| 6 | Practice quiz authoring | Verified |
 | 7 | Quiz taking, grading and saved results | Pending |
 | 8 | Flashcard CRUD and study sessions | Pending |
 | 9 | Spaced repetition and due queues | Pending |
