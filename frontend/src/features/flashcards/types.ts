@@ -1,0 +1,2 @@
+export type Flashcard = { id: string; reviewerId: string; front: string; back: string; createdAt: string; repetitionCount: number; intervalDays: number; easeFactor: number; lastRating: number | null; lastReviewedAt: string | null; nextReviewAt: string | null; due: boolean; status: string }
+export type Review = { reviewId: string; flashcardId: string; rating: number; repetitionCount: number; intervalDays: number; easeFactor: number; reviewedAt: string; nextReviewAt: string; status: string }

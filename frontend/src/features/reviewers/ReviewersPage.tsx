@@ -9,6 +9,7 @@ import { Back, Empty, Failure, Field, Loading, Notice, PageTitle } from '../../s
 import { DeleteAction } from '../../shared/ui/delete-action'
 import type { Reviewer } from './types'
 import type { Note } from '../notes/types'
+import { ReviewerFlashcards } from '../flashcards/FlashcardsPage'
 
 export function ReviewersPage({ path }: { path: string[] }) {
   const [id, action] = path
@@ -29,7 +30,7 @@ function ReviewerDetail({ id }: { id: string }) {
   if (resource.loading) return <Loading label="Opening reviewer…" />
   if (resource.error || !resource.data) return <><Back href="#/reviewers">All reviewers</Back><Failure error={resource.error} retry={resource.reload} /></>
   const reviewer = resource.data
-  return <><Back href="#/reviewers">All reviewers</Back><PageTitle title={reviewer.title} description={`Created ${dateOnly(reviewer.createdAt)}`} actions={<><Button asChild variant="outline"><a href={`#/reviewers/${encodeURIComponent(id)}/edit`}><Pencil aria-hidden="true" />Edit</a></Button><DeleteAction name={reviewer.title} remove={() => apiRequest(url, { method: 'DELETE' })} onDeleted={() => { window.location.hash = '#/reviewers' }} /></>} /><p className="meta"><span className="pill">{reviewer.style.replaceAll('_', ' ')}</span></p><article className="reading section-gap">{reviewer.content}</article><section className="section-gap"><h2>Source notes</h2><ul className="linked-list">{reviewer.notes.map(note => <li key={note.id}><a href={`#/notes/${encodeURIComponent(note.id)}`}>{note.title}<ArrowRight size={16} aria-hidden="true" /></a></li>)}</ul></section></>
+  return <><Back href="#/reviewers">All reviewers</Back><PageTitle title={reviewer.title} description={`Created ${dateOnly(reviewer.createdAt)}`} actions={<><Button asChild variant="outline"><a href={`#/reviewers/${encodeURIComponent(id)}/edit`}><Pencil aria-hidden="true" />Edit</a></Button><DeleteAction name={reviewer.title} remove={() => apiRequest(url, { method: 'DELETE' })} onDeleted={() => { window.location.hash = '#/reviewers' }} /></>} /><p className="meta"><span className="pill">{reviewer.style.replaceAll('_', ' ')}</span></p><article className="reading section-gap">{reviewer.content}</article><section className="section-gap"><h2>Source notes</h2><ul className="linked-list">{reviewer.notes.map(note => <li key={note.id}><a href={`#/notes/${encodeURIComponent(note.id)}`}>{note.title}<ArrowRight size={16} aria-hidden="true" /></a></li>)}</ul></section><ReviewerFlashcards reviewerId={id} /></>
 }
 
 function ReviewerForm({ id }: { id?: string }) {
