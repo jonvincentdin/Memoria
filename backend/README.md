@@ -2,15 +2,23 @@
 
 One Java 17 Spring Boot application built with the Maven wrapper in this folder.
 The canonical entry is `src/main/java/com/csit321g1/lukydizy/memoria/MemoriaApplication.java`.
-Open `Memoria.code-workspace` at the repository root, then use VS Code's Java Run
-button or the `MemoriaApplication` launch configuration. It explicitly selects the
-Maven project, backend working directory, and local PostgreSQL connection.
+Open the repository root (or `Memoria.code-workspace`), then open this canonical
+entry and use Java's Run button or the `MemoriaApplication` launch configuration.
+The launch configuration selects the Maven project, backend working directory,
+and local PostgreSQL connection.
 
 If VS Code was open before the directory flattening, its old folder workspace can
-retain a duplicate `memoria` project pointing at `backend/memoria`. Opening the
-checked-in workspace gives Java a fresh project index. Alternatively, run
-**Java: Clean Java Language Server Workspace** and allow VS Code to restart.
-Do not recreate the old nested application directory.
+retain a duplicate `memoria` project pointing at `backend/memoria`. If Run reports
+`SpringApplication cannot be resolved`, inspect the launch command: a classpath
+containing only `jdt.ls-java-project/bin` means Java is treating the entry point as
+a loose file instead of importing `backend/pom.xml`.
+
+Run **Java: Clean Java Language Server Workspace**, allow the restart, and wait
+for the Maven import/build to finish. Reopen the canonical entry above. The
+`memoria` project should point to `backend`, with a Maven Dependencies container.
+Keep one `MemoriaApplication` launch entry with `projectName: memoria`; remove any
+duplicate generated entry that contains only `mainClass`. Do not recreate the old
+nested application directory or add Spring jars manually to the project.
 
 **Terminal > Run Task > Backend: run (Local PostgreSQL)** runs the Maven wrapper
 without depending on the Java language server's project cache. Stop any running

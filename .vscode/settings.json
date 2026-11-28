@@ -2,6 +2,7 @@
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.project.importOnFirstTimeStartup": "automatic",
+    "java.import.maven.enabled": true,
     "java.import.exclusions": [
         "**/node_modules/**",
         "**/target/**",
