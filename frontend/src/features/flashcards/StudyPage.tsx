@@ -22,11 +22,11 @@ export function StudyPage({ reviewerId, dueOnly = false }: { reviewerId?: string
     <PageTitle title={dueOnly ? 'Review due cards' : 'Study flashcards'} description={dueOnly ? 'New cards and cards whose scheduled review time has arrived.' : 'Read the prompt, recall the answer, then reveal and rate your response.'} />
     {!cards.data?.length ? <Empty title={caughtUp ? 'All caught up' : 'No flashcards to study'} action={<Button asChild><a href={caughtUp ? `#/flashcards/study${reviewerId ? `/${reviewerId}` : ''}` : `#/flashcards/new${reviewerId ? `/${reviewerId}` : ''}`}>{caughtUp ? 'Study all cards' : 'Create a flashcard'}</a></Button>}>
       {caughtUp ? progress.data?.nextDueAt ? `Your next scheduled review is ${dateTime(progress.data.nextDueAt)}. You can still practise your cards at any time.` : 'No cards are due right now. You can still practise at any time.' : 'Add a card to your reviewer to begin a study session.'}
-    </Empty> : <StudySession cards={cards.data} restart={reload} back={back} dueOnly={dueOnly} />}
+    </Empty> : <StudySession cards={cards.data} restart={reload} back={back} dueOnly={dueOnly} progressHref={`#/flashcards/progress${reviewerId ? `/${reviewerId}` : ''}`} />}
   </>
 }
 
-function StudySession({ cards, restart, back, dueOnly }: { cards: Flashcard[]; restart: () => void; back: string; dueOnly: boolean }) {
+function StudySession({ cards, restart, back, dueOnly, progressHref }: { cards: Flashcard[]; restart: () => void; back: string; dueOnly: boolean; progressHref: string }) {
   const [index, setIndex] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const [reviews, setReviews] = useState<Review[]>([])
@@ -47,7 +47,7 @@ function StudySession({ cards, restart, back, dueOnly }: { cards: Flashcard[]; r
   if (index >= cards.length) return <section className="study-complete">
     <h2>Session complete</h2><p>You reviewed {reviews.length} {reviews.length === 1 ? 'flashcard' : 'flashcards'}.</p>{savedSchedule}
     <p className="muted">Each rating updates the card’s schedule. Ratings 1–2 reset its recall streak; ratings 3–5 extend the interval as you learn.</p>
-    <div className="actions"><Button onClick={restart}><RotateCcw aria-hidden="true" />{dueOnly ? 'Check due queue' : 'Study again'}</Button><Button asChild variant="outline"><a href={back}>Back to flashcards</a></Button></div>
+    <div className="actions"><Button onClick={restart}><RotateCcw aria-hidden="true" />{dueOnly ? 'Check due queue' : 'Study again'}</Button><Button asChild variant="outline"><a href={progressHref}>View progress</a></Button><Button asChild variant="ghost"><a href={back}>Back to flashcards</a></Button></div>
   </section>
   const card = cards[index]
   return <section className="study-session">

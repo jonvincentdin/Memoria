@@ -14,7 +14,7 @@ Each feature is verified against the retained Spring APIs, committed and pushed 
 | 7 | Quiz taking, grading and saved results | Verified |
 | 8 | Flashcard CRUD and study sessions | Verified |
 | 9 | Spaced repetition and due queues | Verified |
-| 10 | Flashcard progress and review history | Pending |
+| 10 | Flashcard progress and review history | Verified |
 
 Existing user CRUD and attempt-list/delete APIs remain backend capabilities. The
 standalone Results/history navigation page is outside the previously implemented
