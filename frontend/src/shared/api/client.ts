@@ -55,7 +55,11 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
     headers.set('Content-Type', 'application/json')
   }
 
-  return await checkedResponse(await fetch(path, {
+  const response = await fetch(path, {
     ...options, method, headers, credentials: 'include',
-  })) as T
+  })
+  if (response.status === 401 && !path.startsWith('/api/auth/') && typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('memoria:session-expired'))
+  }
+  return await checkedResponse(response) as T
 }

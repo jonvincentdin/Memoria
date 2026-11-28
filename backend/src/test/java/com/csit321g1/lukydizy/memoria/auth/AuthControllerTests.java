@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +28,26 @@ import tools.jackson.databind.ObjectMapper;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class AuthControllerTests {
+
+    @Test
+    void allowsConfiguredDevelopmentOriginsWithCredentials() throws Exception {
+        for (String origin : java.util.List.of("http://localhost:5173", "http://localhost:4173")) {
+            mockMvc.perform(options("/api/auth/login")
+                    .header("Origin", origin)
+                    .header("Access-Control-Request-Method", "POST"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", origin))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+        }
+    }
+
+    @Test
+    void rejectsUnconfiguredOrigins() throws Exception {
+        mockMvc.perform(options("/api/auth/login")
+                .header("Origin", "https://untrusted.example")
+                .header("Access-Control-Request-Method", "POST"))
+            .andExpect(status().isForbidden());
+    }
 
     @Autowired
     private MockMvc mockMvc;
